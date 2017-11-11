@@ -1,5 +1,3 @@
-#elasticsearch authentication middleware in NodeJs
-
 About this project
 ==================
 Adds an authentication layer for Elasticsearch database.
