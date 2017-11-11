@@ -10,20 +10,20 @@ Promise.promisifyAll(redis);
 
 const __not_object__ = '__not_object__';
 
-function quit(client) {
-  process.nextTick(function() {
+const quit = client => {
+  process.nextTick(_ => {
     client.quit();
   });
-}
+};
 
-function createClient() {
-  var opts = {};
+const createClient = () => {
+  let opts = {};
 
   if (!isObject(config.REDIS_OPTS)) {
     logger.warn('Redis server options not provided. Using default ones.');
   } else {
     opts = config.REDIS_OPTS;
-    opts['retry_strategy'] = function(options) {
+    opts['retry_strategy'] = options => {
       if (options.error && options.error.code === 'ECONNREFUSED') {
         logger.error('Redis server refused to connect');
         return new Error('The server refused the connection');
@@ -42,26 +42,26 @@ function createClient() {
   }
 
   return redis.createClient(opts);
-}
+};
 
-function retrieveIfConnected(token) {
+const retrieveIfConnected = token => {
   return get(token)
-    .then(function(user) {
+    .then(user => {
       return Promise.resolve(user);
     })
-    .catch(function(error) {
+    .catch(error => {
       return Promise.reject(false);
     });
-}
+};
 
-function get(key) {
+const get = key => {
   try {
     const client = createClient();
 
     const command = client
       .getAsync(key)
-      .then(function(res) {
-        var obj;
+      .then(res => {
+        let obj;
         try {
           obj = JSON.parse(res);
         } catch (e) {
@@ -76,7 +76,7 @@ function get(key) {
 
         return Promise.resolve(obj);
       })
-      .catch(function(error) {
+      .catch(error => {
         logger.error(error);
         return Promise.reject(error);
       });
@@ -85,20 +85,20 @@ function get(key) {
     logger.info(e);
     return Promise.reject(e);
   }
-}
+};
 
-function remove(key) {
+const remove = key => {
   try {
     const client = createClient();
 
     const command = client.del(key);
 
     return Promise.resolve(command)
-      .then(function(obj) {
+      .then(obj => {
         quit(client);
         return Promise.resolve(obj);
       })
-      .catch(function(error) {
+      .catch(error => {
         quit(client);
         logger.error(error);
         return Promise.reject(false);
@@ -107,9 +107,9 @@ function remove(key) {
     logger.info(e);
     return Promise.reject(e);
   }
-}
+};
 
-function set(key, value) {
+const set = (key, value) => {
   try {
     const client = createClient();
 
@@ -122,11 +122,11 @@ function set(key, value) {
     const command = client.set(key, JSON.stringify(value));
 
     return Promise.resolve(command)
-      .then(function(obj) {
+      .then(obj => {
         quit(client);
         return Promise.resolve(obj);
       })
-      .catch(function(error) {
+      .catch(error => {
         quit(client);
         logger.error(error);
         return Promise.reject(false);
@@ -135,7 +135,7 @@ function set(key, value) {
     logger.info(e);
     return Promise.reject(e);
   }
-}
+};
 
 module.exports = {
   retrieveIfConnected: retrieveIfConnected,

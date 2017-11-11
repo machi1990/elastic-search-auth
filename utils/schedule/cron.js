@@ -1,7 +1,5 @@
 const schedule = require('node-schedule');
 
-function cron(expression, job) {
+module.exports = (expression, job) => {
   return schedule.scheduleJob(expression, job);
-}
-
-module.exports = cron;
+};

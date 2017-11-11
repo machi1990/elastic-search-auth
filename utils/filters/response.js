@@ -4,7 +4,7 @@
 const compression = require('compression'),
   logger = new (require('../logger/logger'))();
 
-function shouldCompress(req, res) {
+const shouldCompress = (req, res) => {
   if (req.headers['x-no-compression']) {
     // don't compress responses with this request header
     return false;
@@ -12,7 +12,7 @@ function shouldCompress(req, res) {
 
   // fallback to standard filter function
   return compression.filter(req, res);
-}
+};
 
 module.exports = class ResponseFilter {
   static compression() {

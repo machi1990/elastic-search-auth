@@ -1,6 +1,6 @@
 /**
-  * Mostly middleware
-  */
+ * Mostly middleware
+ */
 const cookieParser = require('cookie-parser'),
   bodyParser = require('body-parser'),
   cors_ = require('cors'),
@@ -34,7 +34,7 @@ class Session {
   }
 
   static login() {
-    return Session.authenticate(function(req, res) {
+    return Session.authenticate((req, res) => {
       const user_ = currentuser(req);
 
       /**
@@ -53,7 +53,7 @@ class Session {
   }
 
   static logout() {
-    return function(req, res) {
+    return (req, res) => {
       remove(req.user[auth]); // remove from session before user logout
 
       req.logout();
@@ -100,11 +100,11 @@ module.exports = class RequestFilter {
   }
 
   /**
-     * Update auth token header.
-     */
+   * Update auth token header.
+   */
 
   static setAuthToken() {
-    return function(req, res, next) {
+    return (req, res, next) => {
       res.setHeader(
         AUTH_HEADER,
         req.user ? req.user[auth] : req.headers['authorization']
@@ -128,9 +128,9 @@ module.exports = class RequestFilter {
   }
 
   /**
-     * Use application-level middleware for common functionality.
-     * This includes parsing, authentication and session handling.
-     */
+   * Use application-level middleware for common functionality.
+   * This includes parsing, authentication and session handling.
+   */
 
   static configureMiddlewares(app) {
     if (corsAllowed) {
@@ -153,21 +153,18 @@ module.exports = class RequestFilter {
 
     app.use('/ws/', index);
 
-    app.use('/ws/users/', passport.authenticate(passportType), function(
-      req,
-      res
-    ) {
+    app.use('/ws/users/', passport.authenticate(passportType), (req, res) => {
       RequestFilter.call(req, res, users);
     });
 
-    app.use('/ws/es/', passport.authenticate(passportType), function(req, res) {
+    app.use('/ws/es/', passport.authenticate(passportType), (req, res) => {
       RequestFilter.call(req, res, es);
     });
 
     app.use(
       '/ws/configurations/',
       passport.authenticate(passportType),
-      function(req, res) {
+      (req, res) => {
         RequestFilter.call(req, res, configurations);
       }
     );

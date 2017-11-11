@@ -1,19 +1,15 @@
 const express = require('express'),
-  router = express.Router();
+  router = express.Router(),
+  currentuser = require('../utils/filters/passport').currentuser,
+  userdao = new (require('../utils/dao/user'))(),
+  pattern = /[^a-zA-Z0-9\.]/,
+  isAdmin = req => {
+    const user_ = currentuser(req);
+    return Promise.resolve(user_.role === 'ADMIN');
+  };
 
-const currentuser = require('../utils/filters/passport').currentuser,
-  userdao = new (require('../utils/dao/user'))();
-
-const pattern = /[^a-zA-Z0-9\.]/;
-
-function isAdmin(req) {
-  const user_ = currentuser(req);
-
-  return Promise.resolve(user_.role === 'ADMIN');
-}
-
-router.post('*', function(req, res, next) {
-  isAdmin(req).then(function(ok) {
+router.post('*', (req, res, next) => {
+  isAdmin(req).then(ok => {
     if (!ok) {
       res.status(403).send('Not allowed');
       return;
@@ -23,7 +19,7 @@ router.post('*', function(req, res, next) {
   });
 });
 
-router.put('*', function(req, res, next) {
+router.put('*', (req, res, next) => {
   /**
    * Authorize a change of password to all users.
    */
@@ -33,66 +29,66 @@ router.put('*', function(req, res, next) {
   }
 
   isAdmin(req)
-    .then(function(ok) {
+    .then(ok => {
       next();
     })
-    .catch(function(nok) {
+    .catch(nok => {
       res.status(403).send('Not allowed');
     });
 });
 
-router.delete('*', function(req, res, next) {
+router.delete('*', (req, res, next) => {
   isAdmin(req)
-    .then(function(ok) {
+    .then(ok => {
       next();
     })
-    .catch(function(nok) {
+    .catch(nok => {
       res.status(403).send('Not allowed');
     });
 });
 
-router.get('/roles', function(req, res) {
+router.get('/roles', (req, res) => {
   res.json(userdao.roles);
 });
 
-router.get('/list', function(req, res) {
+router.get('/list', (req, res) => {
   userdao
     .users(req.query)
-    .then(function(users) {
+    .then(users => {
       res.json(users);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(400).send(error.message);
     });
 });
 
-router.get('/view/:username', function(req, res) {
+router.get('/view/:username', (req, res) => {
   const username = req.params.username;
 
   userdao
     .get(username)
-    .then(function(user) {
+    .then(user => {
       res.json(user);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(400).send(error.message);
     });
 });
 
-router.delete('/delete/:username', function(req, res) {
+router.delete('/delete/:username', (req, res) => {
   const username = req.params.username;
 
   userdao
     .delete(username)
-    .then(function(ok) {
+    .then(ok => {
       res.send(ok);
     })
-    .catch(function(nok) {
+    .catch(nok => {
       res.status(400).send(nok);
     });
 });
 
-router.put('/change/password/', function(req, res) {
+router.put('/change/password/', (req, res) => {
   const newpassword = req.body.password;
 
   const user_ = {
@@ -102,17 +98,17 @@ router.put('/change/password/', function(req, res) {
 
   userdao
     .update(user_)
-    .then(function(result) {
+    .then(result => {
       res.json({
         message: 'Password changed',
       });
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(400).send(error.message);
     });
 });
 
-router.put('/edit/', function(req, res) {
+router.put('/edit/', (req, res) => {
   const user_ = req.body;
 
   /**
@@ -122,15 +118,15 @@ router.put('/edit/', function(req, res) {
 
   userdao
     .update(user_)
-    .then(function(result) {
+    .then(result => {
       res.json(result);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(400).send(error.message);
     });
 });
 
-router.post('/create/', function(req, res) {
+router.post('/create/', (req, res) => {
   const user_ = req.body;
 
   if (!user_.username) {
@@ -166,12 +162,12 @@ router.post('/create/', function(req, res) {
 
   userdao
     .create(user_)
-    .then(function(result) {
+    .then(result => {
       res.json({
         message: 'Successfully created.',
       });
     })
-    .catch(function(error) {
+    .catch(error => {
       res.json({
         message:
           'Not successfully created. Verify that the same username is not already present.',

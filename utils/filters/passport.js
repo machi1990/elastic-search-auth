@@ -36,13 +36,14 @@ if (config.AUTH) {
     config.AUTH.usernameField || strategyOpts.usernameField;
   strategyOpts.passwordField =
     config.AUTH.passwordField || strategyOpts.passwordField;
-  strategyOpts.type = config.AUTH.type in supportedStrategies
-    ? config.AUTH.type
-    : strategyOpts.type;
+  strategyOpts.type =
+    config.AUTH.type in supportedStrategies
+      ? config.AUTH.type
+      : strategyOpts.type;
   strategyOpts.server = config.AUTH.ldapOpts || strategyOpts.server;
 }
 
-function strategy() {
+const strategy = () => {
   if (strategyOpts.type === 'basic') {
     return new BasicStrategy(
       {
@@ -60,32 +61,32 @@ function strategy() {
     },
     strategyCb
   );
-}
+};
 
-function localStrategyCb(req, username, password, passportCb) {
+const localStrategyCb = (req, username, password, passportCb) => {
   if (!username || !password) {
     return passportCb(null, false);
   }
 
   /**
-     * Authentication.
-     */
+   * Authentication.
+   */
   return authenticate({
     username: username,
     password: password,
   })
-    .then(function(user) {
+    .then(user => {
       return strategyCb(req, user, passportCb);
     })
-    .catch(function(error) {
+    .catch(error => {
       return passportCb(null, false);
     });
-}
+};
 
-function strategyCb(req, user, passportCb) {
+const strategyCb = (req, user, passportCb) => {
   /**
-     * Session generation
-     */
+   * Session generation
+   */
   if (!user) {
     return passportCb(null, user);
   }
@@ -95,7 +96,7 @@ function strategyCb(req, user, passportCb) {
   }
 
   return passportCb(null, user);
-}
+};
 
 /**
  * TODO
@@ -106,26 +107,26 @@ function strategyCb(req, user, passportCb) {
  */
 passport.use(strategy());
 
-/** 
-  * TODO
-  * 
-  * Configure Passport authenticated session persistence.
-  * In order to restore authentication state across HTTP requests, Passport needs
-  * to serialize users into and deserialize users out of the session.  The
-  * typical implementation of this is as simple as supplying the user ID when
-  * serializing, and querying the user record by ID from the database when
-  * deserializing. 
-*/
-passport.serializeUser(function(user, callback) {
+/**
+ * TODO
+ *
+ * Configure Passport authenticated session persistence.
+ * In order to restore authentication state across HTTP requests, Passport needs
+ * to serialize users into and deserialize users out of the session.  The
+ * typical implementation of this is as simple as supplying the user ID when
+ * serializing, and querying the user record by ID from the database when
+ * deserializing.
+ */
+passport.serializeUser((user, callback) => {
   callback(null, user[auth]);
 });
 
-passport.deserializeUser(function(uuid_, callback) {
+passport.deserializeUser((uuid_, callback) => {
   get(uuid_)
-    .then(function(user_) {
+    .then(user_ => {
       callback(null, user_);
     })
-    .catch(function() {
+    .catch(_ => {
       callback(null, false);
     });
 });
@@ -133,7 +134,7 @@ passport.deserializeUser(function(uuid_, callback) {
 module.exports = {
   passport: passport,
   type: strategyOpts.type,
-  currentuser: function(req) {
+  currentuser: req => {
     /**
      * Clone
      */
