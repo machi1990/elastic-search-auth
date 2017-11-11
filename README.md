@@ -1,5 +1,4 @@
-elasticsearch authentication middleware in NodeJs
-================================================
+#elasticsearch authentication middleware in NodeJs
 
 About this project
 ==================
