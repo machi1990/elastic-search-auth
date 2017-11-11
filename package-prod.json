@@ -1,0 +1,94 @@
+{
+  "name": "elasticsearch-auth",
+  "version": "2.4.4",
+  "private": true,
+  "main": "app.js",
+  "author": {
+    "email": "manyanda.chitimbo@gmail.com",
+    "name": "Manyanda Chitimbo"
+  },
+  "scripts": {
+    "start": "node ./bin/www",
+    "start.dev": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "basic-auth": "^1.1.0",
+    "bcrypt": "^1.0.2",
+    "bluebird": "^3.5.0",
+    "body-parser": "~1.17.1",
+    "compression": "^1.6.2",
+    "cookie-parser": "~1.4.3",
+    "cors": "^2.8.3",
+    "debug": "~2.6.3",
+    "elasticsearch": "^13.0.0-rc2",
+    "express": "~4.15.2",
+    "express-session": "^1.15.2",
+    "hiredis": "^0.5.0",
+    "log4js": "^1.1.1",
+    "morgan": "~1.8.1",
+    "nodemailer": "^4.0.0",
+    "node-schedule": "^1.2.1",
+    "passport": "^0.3.2",
+    "passport-http": "^0.3.0",
+    "passport-ldapauth": "^1.0.0",
+    "redis": "^2.7.1",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.0",
+    "stack-trace": "0.0.9",
+    "uuid": "^3.0.1"
+  },
+  "backend-config": {
+    "ES": {
+      "host": "ES_HOST_ADDRESS",
+      "sniffRobot": {
+        "activate": false,
+        "sniffInterval": 600000,
+        "sniffTimeOut": 10000,
+        "alerting": {
+          "activate": true,
+          "to": "manyanda.chitimbo@gmail.com",
+          "cc": "manyanda.chitimbo@gmail.com"
+        }
+      }
+    },
+    "CORS": {
+      "Allowed": false
+    },
+    "SESSION_SECRET": "Your session secret here",
+    "REDIS_OPTS": {
+      "host": "xx.xx.xx.xx",
+      "port": "6379",
+      "password": "0F7L72ZZnzjurzPl"
+    },
+    "userIdentifer": "login",
+    "DEFAULT_USER": {
+      "username": "admin",
+      "password": "admin",
+      "email": "manyanda.chitimbo@gmail.com",
+      "role": "ADMIN"
+    },
+    "AUTH": {
+      "usernameField": "username",
+      "passwordField": "password",
+      "type": "basic",
+      "ldapOpts": {
+        "url": "ldap://localhost:389",
+        "bindDn": "cn=root",
+        "bindCredentials": "root",
+        "searchBase": "ou=passport-ldapauth",
+        "searchFilter": "(uid={{username}})"
+      }
+    },
+    "MAILER": {
+      "smtp": {
+        "host": "127.0.0.1",
+        "port": 25,
+        "secure": false,
+        "tls": {
+          "rejectUnauthorized": false
+        }
+      },
+      "activate": false
+    }
+  }
+}
