@@ -55,7 +55,7 @@ class Configuration {
   }
 }
 
-function createConfiguration(key, value) {
+const createConfiguration = (key, value) => {
   const configuration = new Configuration(key, value).values();
   return es
     .create({
@@ -64,17 +64,17 @@ function createConfiguration(key, value) {
       id: configuration.key,
       body: configuration,
     })
-    .then(function(res) {
+    .then(res => {
       logger.info(configuration.key + ' successfully created');
       return Promise.resolve(res);
     })
-    .catch(function(error) {
+    .catch(error => {
       logger.warn(configuration.key + ' could not be created');
       throw error;
     });
-}
+};
 
-function getConfigurations(query) {
+const getConfigurations = query => {
   query = query || {};
   return es
     .search({
@@ -84,59 +84,59 @@ function getConfigurations(query) {
       size: query.size || 10,
     })
     .then(
-      function(resp) {
+      resp => {
         const hits = resp.hits.hits;
         const configurations = [];
 
-        hits.forEach(function(hit) {
+        hits.forEach(hit => {
           configurations.push(hit._source);
         });
 
         return Promise.resolve(configurations);
       },
-      function(err) {
+      err => {
         logger.error(error);
         return Promise.resolve([]);
       }
     );
-}
+};
 
-function getConfigurationByKey(key) {
+const getConfigurationByKey = key => {
   return es
     .get({
       index: INDEX,
       type: TYPE,
       id: key,
     })
-    .then(function(config) {
+    .then(config => {
       if (!config._source) {
         return Promise.reject('No such configuration');
       }
 
       return Promise.resolve(config._source.value);
     })
-    .catch(function(error) {
+    .catch(error => {
       throw error;
     });
-}
+};
 
-function deleteConfiguration(key) {
+const deleteConfiguration = key => {
   return es
     .delete({
       index: INDEX,
       type: TYPE,
       id: key,
     })
-    .then(function(res) {
+    .then(res => {
       logger.info(key + ' successfully deleted');
       return Promise.resolve(res);
     })
-    .catch(function(error) {
+    .catch(error => {
       Promise.resolve(false);
     });
-}
+};
 
-function updateConfiguration(configuration) {
+const updateConfiguration = configuration => {
   return es
     .update({
       index: INDEX,
@@ -146,18 +146,18 @@ function updateConfiguration(configuration) {
         doc: configuration,
       },
     })
-    .then(function(res) {
+    .then(res => {
       return Promise.resolve(true);
     })
-    .catch(function(error) {
+    .catch(error => {
       return Promise.resolve(false);
     });
-}
+};
 
 /**
  * Create mapping
  */
-(function() {
+(() => {
   const mapping = {
     properties: {
       key: {
@@ -171,7 +171,7 @@ function updateConfiguration(configuration) {
     },
   };
 
-  const updateAuthVersion = function() {
+  const updateAuthVersion = () => {
     es
       .update({
         index: INDEX,
@@ -181,10 +181,10 @@ function updateConfiguration(configuration) {
           doc: esAuthVersion,
         },
       })
-      .then(function(res) {
+      .then(res => {
         logger.info(JSON.stringify(res, null, 2));
       })
-      .catch(function(error) {
+      .catch(error => {
         logger.error(error);
         es
           .create({
@@ -193,13 +193,13 @@ function updateConfiguration(configuration) {
             id: esAuthVersion.key,
             body: esAuthVersion,
           })
-          .then(function(res) {
+          .then(res => {
             logger.info(JSON.stringify(res, null, 2));
           });
       });
   };
 
-  const createMapping = function() {
+  const createMapping = () => {
     const mappingOpts = {
       method: 'POST',
       uri: ES_HOST + INDEX + '/_mapping/' + TYPE,
@@ -209,10 +209,10 @@ function updateConfiguration(configuration) {
 
     request
       .post(mappingOpts)
-      .then(function(body) {
+      .then(_ => {
         updateAuthVersion();
       })
-      .catch(function() {
+      .catch(_ => {
         updateAuthVersion();
       });
   };
@@ -226,10 +226,10 @@ function updateConfiguration(configuration) {
 
   request
     .post(indexOpts)
-    .then(function() {
+    .then(_ => {
       createMapping();
     })
-    .catch(function(error) {
+    .catch(_ => {
       createMapping();
     });
 })();

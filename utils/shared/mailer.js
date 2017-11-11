@@ -23,9 +23,9 @@ module.exports = class Mailer {
     }
 
     /**
-         * Send mail with defined transport object.
-         */
-    transporter.sendMail(opts, function(error, info) {
+     * Send mail with defined transport object.
+     */
+    transporter.sendMail(opts, (error, info) => {
       if (error) {
         return logger.error(error);
       }

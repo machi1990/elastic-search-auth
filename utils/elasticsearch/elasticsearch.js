@@ -9,11 +9,11 @@ const config = require('../../setup'),
   Mailer = require('../shared/mailer'),
   cron = require('../schedule/cron');
 
-function error(res, message) {
+const error = (res, message) => {
   res.status(500);
   res.setHeader('Content-Type', 'application/json');
   res.send(JSON.stringify(message, null, 1));
-}
+};
 
 assert.notEqual(config.ES, undefined, 'Elasticsearch opts required');
 assert.equal(
@@ -26,7 +26,7 @@ assert.notEqual(config.ES.host, undefined, 'Elasticsearch host required');
 const ES_HOST = config.ES.host;
 const SOME_MINUTES = 1000 * 60 * 10;
 
-function opts(req) {
+const opts = req => {
   const opts_ = {
     method: req.method.toUpperCase(),
     uri: ES_HOST + req.url.substring(1),
@@ -38,27 +38,27 @@ function opts(req) {
   logger.debug(JSON.stringify(opts_, null, 1));
 
   return opts_;
-}
+};
 
-function proxy(req, res) {
+const proxy = (req, res) => {
   switch (req.method) {
     case 'PUT':
       request
         .put(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           error(res, err);
         });
       break;
     case 'POST':
       request
         .post(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -66,10 +66,10 @@ function proxy(req, res) {
     case 'PATCH':
       request
         .patch(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -77,10 +77,10 @@ function proxy(req, res) {
     case 'HEAD':
       request
         .get(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.send(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -88,10 +88,10 @@ function proxy(req, res) {
     case 'OPTIONS':
       request
         .options(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -99,10 +99,10 @@ function proxy(req, res) {
     case 'DELETE':
       request
         .delete(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -110,10 +110,10 @@ function proxy(req, res) {
     case 'GET':
       request
         .get(opts(req))
-        .then(function(body) {
+        .then(body => {
           res.json(body);
         })
-        .catch(function(err) {
+        .catch(err => {
           logger.error(err);
           error(res, err);
         });
@@ -122,7 +122,7 @@ function proxy(req, res) {
       error(res, 'Method not supported');
     }
   }
-}
+};
 
 const client = new elasticsearch.Client({
   host: ES_HOST,
@@ -134,37 +134,37 @@ const client = new elasticsearch.Client({
   keepAlive: true,
 });
 
-function sniff(timeout) {
+const sniff = timeout => {
   timeout = Math.max(timeout || 10000, 10000);
 
   return client
     .ping({
       requestTimeout: timeout,
     })
-    .then(function(result) {
+    .then(result => {
       return Promise.resolve(result);
     })
-    .catch(function(err) {
+    .catch(err => {
       return Promise.reject(err);
     });
-}
+};
 
 /**
- * Check if app ES Cluster is up and running. 
+ * Check if app ES Cluster is up and running.
  * Alerts otherwise.
  */
-(function() {
-  function isUp(timeout) {
+(() => {
+  const isUp = timeout => {
     return sniff(timeout)
-      .then(function(ok) {
+      .then(ok => {
         logger.info('Elasticsearch cluster up');
         return Promise.resolve(true);
       })
-      .catch(function(err) {
+      .catch(err => {
         logger.error(err);
         return Promise.resolve(false);
       });
-  }
+  };
 
   if (
     !config.ES.sniffRobot ||
@@ -184,7 +184,7 @@ function sniff(timeout) {
     ? config.ES.sniffRobot.alerting
     : {};
 
-  function sendAlert() {
+  const sendAlert = () => {
     if (!alerting.activate) {
       logger.debug('Elasticsearch cluster down. Alerting not activated');
       return;
@@ -198,19 +198,19 @@ function sniff(timeout) {
         'Monitor robot has detected that your Elasticsearch cluster is down',
       html: '<p>Elasticsearch cluster town.</p>',
     });
-  }
+  };
 
-  function monitor() {
+  const monitor = () => {
     isUp(timeout)
-      .then(function(ok) {
+      .then(ok => {
         if (!ok) {
           sendAlert();
         }
       })
-      .catch(function(nok) {
+      .catch(nok => {
         sendAlert();
       });
-  }
+  };
 
   const INTERVAL = '*/' + interval + ' * * * *';
   cron(interval, monitor); // monotor job

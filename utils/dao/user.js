@@ -81,12 +81,12 @@ class User {
   }
 }
 
-function clean(user) {
+let clean = user => {
   delete user.password;
   return user;
-}
+};
 
-function create(user) {
+const create = user => {
   user = new User(user).user();
   return es
     .create({
@@ -95,33 +95,33 @@ function create(user) {
       id: user.username,
       body: user,
     })
-    .then(function(res) {
+    .then(res => {
       logger.info(user.username + ' successfully created');
       return Promise.resolve(res);
     })
-    .catch(function(error) {
+    .catch(error => {
       logger.warn(user.username + ' could not be created');
       throw error;
     });
-}
+};
 
-function delete_(username) {
+const delete_ = username => {
   return es
     .delete({
       index: INDEX,
       type: TYPE,
       id: username,
     })
-    .then(function(res) {
+    .then(res => {
       logger.info(username + ' successfully deleted');
       return Promise.resolve(res);
     })
-    .catch(function(error) {
+    .catch(error => {
       Promise.resolve(false);
     });
-}
+};
 
-function update(user) {
+const update = user => {
   return es
     .update({
       index: INDEX,
@@ -131,58 +131,58 @@ function update(user) {
         doc: user,
       },
     })
-    .then(function(res) {
+    .then(res => {
       return Promise.resolve(true);
     })
-    .catch(function(error) {
+    .catch(error => {
       return Promise.resolve(false);
     });
-}
+};
 
-function connect(username, password) {
+const connect = (username, password) => {
   return get_(username)
-    .then(function(user) {
+    .then(user => {
       if (!bcrypt.compareSync(password, user.password)) {
         return Promise.reject(false);
       }
 
       return Promise.resolve(clean(user));
     })
-    .catch(function(error) {
+    .catch(error => {
       return Promise.resolve(undefined);
     });
-}
+};
 
-function get_(username) {
+const get_ = usernam => {
   return es
     .get({
       index: INDEX,
       type: TYPE,
       id: username,
     })
-    .then(function(user) {
+    .then(user => {
       if (!user._source) {
         return Promise.reject('No such user');
       }
 
       return Promise.resolve(user._source);
     })
-    .catch(function(error) {
+    .catch(error => {
       throw error;
     });
-}
+};
 
-function get(username) {
+const get = username => {
   return get_(username)
-    .then(function(user_) {
+    .then(user_ => {
       return Promise.resolve(clean(user_));
     })
-    .catch(function(error) {
+    .catch(error => {
       throw error;
     });
-}
+};
 
-function users(query) {
+const users = query => {
   query = query || {};
   return es
     .search({
@@ -192,31 +192,31 @@ function users(query) {
       size: query.size || 10,
     })
     .then(
-      function(resp) {
+      resp => {
         const hits = resp.hits.hits;
         const users = [];
 
-        hits.forEach(function(hit) {
+        hits.forEach(hit => {
           users.push(clean(hit._source));
         });
 
         return Promise.resolve(users);
       },
-      function(err) {
+      err => {
         logger.error(error);
         return Promise.resolve([]);
       }
     );
-}
+};
 
-function generatePassword(password) {
+const generatePassword = password => {
   return bcrypt.hashSync(password, SALT_ROUNDS);
-}
+};
 
 /**
  * Create a default user.
  */
-(function() {
+(() => {
   const DEFAULT_USER = config.DEFAULT_USER;
 
   assert.notEqual(
@@ -231,36 +231,36 @@ function generatePassword(password) {
   );
 
   /**
-     * Default user is admin always.
-     */
+   * Default user is admin always.
+   */
   DEFAULT_USER.role = 'ADMIN';
 
-  const createDefault = function() {
+  const createDefault = () => {
     es
       .exists({
         index: INDEX,
         type: TYPE,
         id: DEFAULT_USER.username,
       })
-      .then(function(exists) {
+      .then(exists => {
         if (exists !== true) {
           create(DEFAULT_USER)
-            .then(function(res) {
+            .then(res => {
               logger.info(
                 'Default user created: ' + JSON.stringify(res, null, 2)
               );
             })
-            .catch(function(error) {
+            .catch(error => {
               logger.error(error);
             });
         }
       })
-      .catch(function(error) {
+      .catch(error => {
         logger.error(error);
       });
   };
 
-  const createMapping = function() {
+  const createMapping = () => {
     const mappingOpts = {
       method: 'POST',
       uri: ES_HOST + INDEX + '/_mapping/' + TYPE,
@@ -270,10 +270,10 @@ function generatePassword(password) {
 
     request
       .post(mappingOpts)
-      .then(function(body) {
+      .then(body => {
         createDefault();
       })
-      .catch(function() {
+      .catch(() => {
         createDefault();
       });
   };
@@ -287,10 +287,10 @@ function generatePassword(password) {
 
   request
     .post(indexOpts)
-    .then(function() {
+    .then(() => {
       createMapping();
     })
-    .catch(function(error) {
+    .catch(() => {
       createMapping();
     });
 })();

@@ -8,14 +8,14 @@ config = require('../../setup');
 
 /**
  * A session expires after 1 hour.
-*/
+ */
 SESSION_TIME = 1000 * 60 * 60;
 
 const authenticationIDs = {};
 
 const auth = '__authenticationsid__';
 
-function credentials(token) {
+const credentials = token => {
   token = decodeURIComponent(token || '');
   token = token.replace('Basic ', '');
 
@@ -27,15 +27,18 @@ function credentials(token) {
   logger.info('Authentication header found. Verifying if user authorized');
 
   const buf = new Buffer(token, 'base64');
-  const creds = buf.toString('ascii').trim().split(':');
+  const creds = buf
+    .toString('ascii')
+    .trim()
+    .split(':');
 
   return {
     username: creds[0],
     password: creds[1],
   };
-}
+};
 
-function put(uuid_, user) {
+const put = (uuid_, user) => {
   user[auth] = user[auth] || uuid_;
   user.date = Date.now();
   user.__server = config.ES.host;
@@ -45,30 +48,30 @@ function put(uuid_, user) {
   redis.set(uuid_, authenticationIDs[uuid_]);
 
   return Promise.resolve(true);
-}
+};
 
-function get(token) {
+const get = token => {
   if (authenticationIDs[token]) {
     put(token, authenticationIDs[token]);
     return Promise.resolve(authenticationIDs[token]);
   }
 
   return retrieveFromRedis(token);
-}
+};
 
-function remove(token) {
+const remove = token => {
   delete authenticationIDs[token];
   redis.remove(token);
-}
+};
 
-function isActive(val) {
+const isActive = val => {
   return Date.now() - val <= SESSION_TIME;
-}
+};
 
-function retrieveFromRedis(token) {
+const retrieveFromRedis = token => {
   return redis
     .retrieveIfConnected(token)
-    .then(function(res) {
+    .then(res => {
       if (!isActive(res.date)) {
         redis.remove(token);
         return Promise.reject(false);
@@ -82,13 +85,13 @@ function retrieveFromRedis(token) {
       put(token, res);
       return Promise.resolve(authenticationIDs[token]);
     })
-    .catch(function() {
+    .catch(_ => {
       remove(token);
       return Promise.reject(false);
     });
-}
+};
 
-function authenticate(creds) {
+const authenticate = creds => {
   if (creds.username === auth) {
     if (
       !(creds.password in authenticationIDs) ||
@@ -107,21 +110,21 @@ function authenticate(creds) {
     */
   return userdao
     .connect(creds.username, creds.password)
-    .then(function(user) {
+    .then(user => {
       return put(uuid(), user)
-        .then(function(ok) {
+        .then(ok => {
           return Promise.resolve(user);
         })
-        .catch(function(nok) {
+        .catch(nok => {
           return Promise.resolve(user);
         });
     })
-    .catch(function(error) {
+    .catch(error => {
       return Promise.reject(false);
     });
-}
+};
 
-function removeExpiredSessions() {
+const removeExpiredSessions = () => {
   const expired = [];
   for (const id in authenticationIDs) {
     if (!isActive(authenticationIDs[id])) {
@@ -129,10 +132,10 @@ function removeExpiredSessions() {
     }
   }
 
-  expired.forEach(function(id) {
+  expired.forEach(id => {
     delete authenticationIDs[id];
   });
-}
+};
 
 /**
  * Trigger removeExpiredSessions after every 10 mins.

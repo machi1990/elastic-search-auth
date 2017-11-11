@@ -1,7 +1,7 @@
 const ResponseFilter = require('./utils/filters/response'),
   RequestFilter = require('./utils/filters/request');
 
-module.exports = function(app) {
+module.exports = app => {
   ResponseFilter.config(app);
   RequestFilter.config(app);
   return app;

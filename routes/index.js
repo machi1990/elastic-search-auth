@@ -1,11 +1,10 @@
 const express = require('express'),
-  router = express.Router();
-
-const sniff = require('../utils/elasticsearch/elasticsearch').sniff,
+  router = express.Router(),
+  sniff = require('../utils/elasticsearch/elasticsearch').sniff,
   configurationdao = new (require('../utils/dao/configuration'))(),
   startTime = Date.now();
 
-router.get('/', function(req, res) {
+router.get('/', (req, res) => {
   const uptime_mills = Date.now() - startTime,
     uptime_secs = uptime_mills / 1000,
     uptime_mins = Math.round(uptime_secs / 60),
@@ -19,27 +18,27 @@ router.get('/', function(req, res) {
   });
 });
 
-router.get('/sniff-es/', function(req, res) {
+router.get('/sniff-es/', (req, res) => {
   sniff()
-    .then(function(ok) {
+    .then(ok => {
       res.json({
         message: ok,
       });
     })
-    .catch(function(nok) {
+    .catch(nok => {
       res.json({
         message: nok,
       });
     });
 });
 
-router.get('/es-auth-version/', function(req, res) {
+router.get('/es-auth-version/', (req, res) => {
   configurationdao
     .get(configurationdao.KEY)
-    .then(function(configuration) {
+    .then(configuration => {
       res.send(configuration);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(400).send(error.message);
     });
 });

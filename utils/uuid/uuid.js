@@ -3,8 +3,6 @@ const uuidV4 = require('uuid/v4'),
 
 const token = new Buffer(config.ES.host).toString('base64');
 
-function uuid() {
+module.exports = _ => {
   return token + '-' + uuidV4();
-}
-
-module.exports = uuid;
+};
