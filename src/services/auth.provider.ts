@@ -12,10 +12,10 @@ export class Principal implements interfaces.Principal {
     return Promise.resolve(true);
   }
   public isResourceOwner(resourceId: any): Promise<boolean> {
-    return Promise.resolve(resourceId === 1111);
+    return Promise.resolve(false);
   }
   public isInRole(role: string): Promise<boolean> {
-    return Promise.resolve(role === 'admin');
+    return Promise.resolve(role === this.details.role);
   }
 }
 
@@ -30,9 +30,8 @@ export class AuthProvider implements interfaces.AuthProvider {
     res: express.Response,
     next: express.NextFunction
   ): Promise<interfaces.Principal> {
-    const token = req.headers['x-auth-token'];
     const principal = new Principal();
-    principal.details = undefined;
+    principal.details = req['user'];
     return principal;
   }
 }
