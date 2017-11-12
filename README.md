@@ -12,7 +12,7 @@ TODO
 2) Adds more authorization types - current supported are ldap authentication and a local implentation bases on the user index created on the target cluster.
 3) Automatically backing up of cluster (Cluster snapshots)
 
-4) Use inversifyJs (http://inversify.io/) for IOC (DI done nicely)and TypeScript's strong typing. 
+4) Use inversifyJs (http://inversify.io/) for IOC (DI done nicely)and TypeScript's strong typing. The testing phase would be utterly simplified afterwards.  
 
 CONTACT
 ======
