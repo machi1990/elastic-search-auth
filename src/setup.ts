@@ -11,6 +11,7 @@ import { UserController } from './controllers/user.controller';
 import { ElasticSearchController } from './controllers/elasticsearch.controller';
 import { ConfigurationContoller } from './controllers/configuration.controller';
 import { AuthService } from './services/auth.service';
+import { MailingService } from './services/mailing.service';
 
 export const container = new Container();
 container
@@ -57,3 +58,4 @@ container
   .bind<AuthService>(AuthService)
   .to(AuthService)
   .inSingletonScope();
+container.bind<MailingService>(MailingService).to(MailingService);
