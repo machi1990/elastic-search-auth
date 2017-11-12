@@ -4,9 +4,10 @@ import * as assert from 'assert';
 import * as request from 'request-promise';
 import { Response, Request } from 'express';
 import * as CONFIG from '../config';
-import { isObject } from '../utils';
+import { isObject, cron } from '../utils';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../middleware/logger';
+import { MailingService } from './mailing.service';
 
 const error = (res, message) => {
   res.status(500);
@@ -30,7 +31,10 @@ export interface IEsService {
 @injectable()
 export class ElasticSearchService implements IEsService {
   public client: any;
-  public constructor(@inject(Logger) private logger: Logger) {
+  public constructor(
+    @inject(Logger) private logger: Logger,
+    @inject(MailingService) private mailer: MailingService
+  ) {
     this.client = new elasticsearch.Client({
       host: ES_HOST,
       log: {
@@ -40,9 +44,65 @@ export class ElasticSearchService implements IEsService {
       requestTimeout: Infinity,
       keepAlive: true
     });
+
+    this.setup();
   }
 
-  public sniff(timeout?: number): Promise<any> {
+  private setup() {
+    if (
+      !CONFIG.ES.sniffRobot ||
+      !isObject(CONFIG.ES.sniffRobot) ||
+      !CONFIG.ES.sniffRobot.activate
+    ) {
+      this.logger.debug('Elasticsearch cluster monitoring not enabled');
+      return;
+    }
+
+    const interval = Math.min((CONFIG.ES.sniffRobot.sniffInterval || SOME_MINUTES) / 1000 * 60, 10);
+    const timeout = CONFIG.ES.sniffRobot.sniffTimeOut || SOME_MINUTES;
+    const alerting = isObject(CONFIG.ES.sniffRobot.alerting) ? CONFIG.ES.sniffRobot.alerting : {};
+
+    const monitor = () => {
+      const ok = this.isUp(timeout);
+      if (ok) {
+        return;
+      }
+      this.sendAlert(alerting);
+    };
+
+    const INTERVAL = '*/' + interval + ' * * * *';
+    cron(interval, monitor);
+  }
+
+  private sendAlert(alerting: any) {
+    if (!alerting.activate) {
+      this.logger.debug('Elasticsearch cluster down. Alerting not activated');
+      return;
+    }
+
+    this.mailer.send({
+      to: alerting.to,
+      cc: alerting.cc,
+      subject: 'Elasticsearch cluster down',
+      text: 'Monitor robot has detected that your Elasticsearch cluster is down',
+      html: '<p>Elasticsearch cluster town.</p>'
+    });
+  }
+
+  private async isUp(timeout) {
+    try {
+      const isUp = await this.sniff(timeout);
+      if (isUp) {
+        this.logger.info('Elasticsearch cluster up');
+        return true;
+      }
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
+  }
+
+  public async sniff(timeout?: number): Promise<any> {
     timeout = Math.max(timeout || 10000, 10000);
 
     return this.client

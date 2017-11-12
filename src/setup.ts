@@ -10,8 +10,10 @@ import { UserService } from './services/user.service';
 import { UserController } from './controllers/user.controller';
 import { ElasticSearchController } from './controllers/elasticsearch.controller';
 import { ConfigurationContoller } from './controllers/configuration.controller';
-import { AuthService } from './services/auth.service';
+import { AuthService, PassportService } from './services/auth.service';
 import { MailingService } from './services/mailing.service';
+import { ResponseFilter } from './middleware/response.filter';
+import { LoginController } from './controllers/login.controller';
 
 export const container = new Container();
 container
@@ -35,6 +37,10 @@ container
   .to(ConfigurationContoller)
   .whenTargetNamed('ConfigurationController');
 container
+  .bind<interfaces.Controller>(TYPE.Controller)
+  .to(LoginController)
+  .whenTargetNamed('LoginController');
+container
   .bind<ElasticSearchService>(ElasticSearchService)
   .to(ElasticSearchService)
   .inSingletonScope();
@@ -57,5 +63,13 @@ container
 container
   .bind<AuthService>(AuthService)
   .to(AuthService)
+  .inSingletonScope();
+container
+  .bind<PassportService>(PassportService)
+  .to(PassportService)
+  .inSingletonScope();
+container
+  .bind<ResponseFilter>(ResponseFilter)
+  .to(ResponseFilter)
   .inSingletonScope();
 container.bind<MailingService>(MailingService).to(MailingService);
