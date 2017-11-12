@@ -1,24 +1,15 @@
 import * as express from 'express';
-import {
-  interfaces,
-  controller,
-  httpGet,
-  httpPost,
-  httpDelete,
-  request,
-  queryParam,
-  response,
-  requestParam,
-} from 'inversify-express-utils';
+import {controller,httpGet} from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 import { ElasticSearchService } from '../services/elasticsearch.service';
+import { ConfigurationService } from '../services/configuration.service';
 
 @injectable()
-@controller('/')
+@controller('/home')
 export class IndexController {
   private static readonly START_TIME = Date.now();
   public constructor(
-    @inject(ElasticSearchService) private esService: ElasticSearchService
+    @inject(ElasticSearchService) private esService: ElasticSearchService, @inject(ConfigurationService) private configService: ConfigurationService
   ) {
   }
 
@@ -37,11 +28,13 @@ export class IndexController {
     };
   }
 
-  @httpGet('/sniff')
-  public sniff(@request() req: express.Request,
-    @response() res: express.Response): void {
-    this.esService.sniff().then(_ => res.json(_)).catch(_ => {
-        res.status(500).send(_);
-    });
+  @httpGet('/sniff-es')
+  public async sniff() {
+        return await this.esService.sniff();   
+  }
+
+  @httpGet('/es-auth-version')
+  public async esVersion() {
+    return await this.configService.get(this.configService.key);
   }
 }

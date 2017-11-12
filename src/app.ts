@@ -2,47 +2,44 @@ import 'reflect-metadata';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import { Container } from 'inversify';
+import { IndexController } from './controllers/index.controller';
+import { RequestFilter } from './middleware/request.container.filter';
+import { Logger } from './middleware/logger';
+import { container } from './setup';
+import { ElasticSearchService} from './services/elasticsearch.service';
 import {
   interfaces,
   InversifyExpressServer,
   TYPE,
 } from 'inversify-express-utils';
-import { IndexController } from './controllers/index.controller';
-import { RequestFilter } from './middleware/request.container.filter';
-import {
-  ElasticSearchService,
-  IEsService,
-} from './services/elasticsearch.service';
-import { Logger } from './middleware/logger';
-import { container } from './setup';
-import { BadRequest } from './middleware/bad-request.filter';
 
 /**
  * Router
  */
-const router = express.Router({
+const ROUTER_CONFIG = express.Router({
   caseSensitive: false,
   mergeParams: false,
   strict: false,
 });
 
 // create server
-const server = new InversifyExpressServer(container, router, {
+const SERVER = new InversifyExpressServer(container, ROUTER_CONFIG, {
   rootPath: '/api/v2/'
 });
 
-server
+const INTERNAL_SERVER_ERROR = 500;
+
+SERVER
   .setConfig(app => {
     container.get<RequestFilter>(RequestFilter).configureMiddlewaresFor(app);
-    // container.get<BadRequest>(BadRequest).config(app);
     app.use(container.get<Logger>(Logger).requestConnector());
   })
   .setErrorConfig(app => {
     app.use((err, req, res, next) => {
-      console.error(err.stack);
-      res.status(500).send('Problem occurred!');
+      container.get<Logger>(Logger).error(err);
+      res.status(err.status || INTERNAL_SERVER_ERROR).send(err);
     });
   });
 
-const app = server.build();
+const app = SERVER.build();
 export = app;

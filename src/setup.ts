@@ -8,16 +8,12 @@ import { IndexController } from './controllers/index.controller';
 import { ElasticSearchService } from './services/elasticsearch.service';
 import { Logger } from './middleware/logger';
 import { RequestFilter } from './middleware/request.container.filter';
-import { BadRequest } from './middleware/bad-request.filter';
+import { ConfigurationService } from './services/configuration.service';
 
 export const container = new Container();
 container
 .bind<RequestFilter>(RequestFilter)
 .to(RequestFilter)
-.inSingletonScope();
-container
-.bind<BadRequest>(BadRequest)
-.to(BadRequest)
 .inSingletonScope();
 container
   .bind<interfaces.Controller>(TYPE.Controller)
@@ -31,5 +27,4 @@ container
   .bind<Logger>(Logger)
   .to(Logger)
   .inSingletonScope();
-
-
+container.bind<ConfigurationService>(ConfigurationService).to(ConfigurationService).inSingletonScope();

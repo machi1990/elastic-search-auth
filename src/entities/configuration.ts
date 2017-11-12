@@ -3,7 +3,7 @@ export interface IConfiguration {
   value?: string;
 }
 
-class Configuration {
+export class Configuration {
   private key: string;
   private value: string;
 
