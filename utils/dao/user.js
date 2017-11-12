@@ -153,7 +153,7 @@ const connect = (username, password) => {
     });
 };
 
-const get_ = usernam => {
+const get_ = username => {
   return es
     .get({
       index: INDEX,

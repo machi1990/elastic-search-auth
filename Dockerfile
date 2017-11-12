@@ -4,13 +4,9 @@ MAINTAINER Manyanda Chitimbo <manyanda.chitimbo@gmail.com>
 
 ENV ES_HOST_ADDRESS http://10.1.1.185:9200/
 
-COPY utils /root/utils
 COPY bin /root/bin
-COPY routes /root/routes
+COPY build /root/build
 
-COPY app.js /root/app.js
-COPY init.js /root/init.js
-COPY setup.js /root/setup.js
 COPY package-prod.json /root/package.json
 COPY entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
