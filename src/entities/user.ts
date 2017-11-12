@@ -1,11 +1,9 @@
-const bcrypt = require('bcrypt');
+import { EncryptionService } from '../services/encryption.service';
 
 export const ROLES = {
   ADMIN: true,
-  USER: true,
+  USER: true
 };
-
-const SALT_ROUNDS = 16;
 
 /**
  * TODO REVISE THESE
@@ -34,16 +32,19 @@ export class User {
     this.username = user['username'];
     this.firstname = user['firstname'];
     this.lastname = user['lastname'];
-    this.password = generatePassword(user['password']);
+    this.password = EncryptionService.encrypt(user['password']);
     this.role = user['role'] in ROLES ? user['role'] : 'USER';
     this.email = user['email'];
   }
 
-  public clean() {
-    this.password = undefined;
+  public user(): IUser {
+    return {
+      username: this.username,
+      firstname: this.firstname,
+      lastname: this.lastname,
+      password: this.password,
+      role: this.role,
+      email: this.email
+    };
   }
 }
-
-const generatePassword = password => {
-  return bcrypt.hashSync(password, SALT_ROUNDS);
-};

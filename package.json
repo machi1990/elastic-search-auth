@@ -22,7 +22,7 @@
       "git add"
     ],
     "*.ts": [
-      "prettier --use-tabs false --single-quote --trailing-comma --parser typescript --write",
+      "prettier --parser typescript --single-quote --print-width 100 --trailing-comma none --use-tabs false --write",
       "git add"
     ]
   },

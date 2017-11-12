@@ -13,9 +13,9 @@ LOG4JS.configure({
     {
       type: 'file',
       filename: 'logs/elasticsearch-auth.log',
-      category: 'ELASTICSEARCH-AUTH',
-    },
-  ],
+      category: 'ELASTICSEARCH-AUTH'
+    }
+  ]
 });
 
 const LOGGER = LOG4JS.getLogger('ELASTICSEARCH-AUTH');

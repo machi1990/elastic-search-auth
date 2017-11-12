@@ -15,11 +15,7 @@ const error = (res, message) => {
 };
 
 assert.notEqual(CONFIG.ES, undefined, 'Elasticsearch opts required');
-assert.equal(
-  true,
-  isObject(CONFIG.ES),
-  'Elasticsearch config must be an object'
-);
+assert.equal(true, isObject(CONFIG.ES), 'Elasticsearch config must be an object');
 assert.notEqual(CONFIG.ES.host, undefined, 'Elasticsearch host required');
 
 const ES_HOST = CONFIG.ES.host;
@@ -38,11 +34,11 @@ export class ElasticSearchService implements IEsService {
     this.client = new elasticsearch.Client({
       host: ES_HOST,
       log: {
-        type: 'file',
+        type: 'file'
       },
       sniffAfterConnectionFault: true,
       requestTimeout: Infinity,
-      keepAlive: true,
+      keepAlive: true
     });
   }
 
@@ -51,7 +47,7 @@ export class ElasticSearchService implements IEsService {
 
     return this.client
       .ping({
-        requestTimeout: timeout,
+        requestTimeout: timeout
       })
       .then(result => {
         return Promise.resolve(result);
@@ -150,7 +146,7 @@ export class ElasticSearchService implements IEsService {
       uri: ES_HOST + req.url.substring(1),
       body: req.body,
       timeout: SOME_MINUTES,
-      json: true,
+      json: true
     };
 
     this.logger.debug(JSON.stringify(opts_, null, 1));

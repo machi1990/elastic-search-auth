@@ -4,7 +4,7 @@ import * as CORS from 'cors';
 import * as SESSION from 'express-session';
 import * as PASSPORT from 'PASSPORT';
 import { Logger } from './logger';
-import * as CONFIG  from '../config';
+import * as CONFIG from '../config';
 import { injectable } from 'inversify';
 const CORS_ALLOWED = CONFIG.CORS.Allowed || false;
 
@@ -30,7 +30,7 @@ export class RequestFilter {
     return SESSION({
       secret: CONFIG.SESSION_SECRET || 'This is default session secret.',
       resave: false,
-      saveUninitialized: false,
+      saveUninitialized: false
     });
   }
 

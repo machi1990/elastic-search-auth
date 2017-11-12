@@ -1,5 +1,5 @@
 import * as express from 'express';
-import {controller,httpGet} from 'inversify-express-utils';
+import { controller, httpGet } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 import { ElasticSearchService } from '../services/elasticsearch.service';
 import { ConfigurationService } from '../services/configuration.service';
@@ -9,9 +9,9 @@ import { ConfigurationService } from '../services/configuration.service';
 export class IndexController {
   private static readonly START_TIME = Date.now();
   public constructor(
-    @inject(ElasticSearchService) private esService: ElasticSearchService, @inject(ConfigurationService) private configService: ConfigurationService
-  ) {
-  }
+    @inject(ElasticSearchService) private esService: ElasticSearchService,
+    @inject(ConfigurationService) private configService: ConfigurationService
+  ) {}
 
   @httpGet('/')
   public uptime(): Object {
@@ -24,13 +24,13 @@ export class IndexController {
       millis: UPTIME_MILLS,
       minutes: UPTIME_MINS,
       seconds: UPTIME_SECS,
-      hours: UPTIME_HRS,
+      hours: UPTIME_HRS
     };
   }
 
   @httpGet('/sniff-es')
   public async sniff() {
-        return await this.esService.sniff();   
+    return await this.esService.sniff();
   }
 
   @httpGet('/es-auth-version')
