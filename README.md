@@ -9,10 +9,12 @@ See "backend-config" field of the "package.json" file to see how to configure th
 TODO
 ====
 1) Unit tests.
-2) Adds more authorization types - current supported are ldap authentication and a local implentation bases on the user index created on the target cluster.
+
+2) Adds more authorization types - current supported are ldap authentication and a local implentation. The later is based on the user index which is automatically created on the target Elasticsearch cluster.
+
 3) Automatically backing up of cluster (Cluster snapshots)
 
-4) Use inversifyJs (http://inversify.io/) for IOC (DI done nicely)and TypeScript's strong typing. 
+4) Use inversifyJs (http://inversify.io/) for IOC (DI done nicely)and TypeScript's strong typing. This is on going on this branch (https://github.com/machi1990/elastic-search-auth/tree/ftr-ioc-wc-inversifyjs).
 
 CONTACT
 ======
