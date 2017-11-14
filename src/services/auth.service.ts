@@ -59,19 +59,19 @@ export class AuthService {
     return passport.authenticate(AuthService.TYPE);
   }
 
-  public remove(token) {
+  public async remove(token) {
     delete authenticationIDs[token];
-    this.redisService.remove(token);
+    await this.redisService.remove(token);
   }
 
-  public put(uuid_, user) {
+  public async put(uuid_, user) {
     user[auth] = user[auth] || uuid_;
     user.date = Date.now();
     user.__server = config.ES.host;
 
     authenticationIDs[uuid_] = user;
 
-    return this.redisService.set(uuid_, authenticationIDs[uuid_]);
+    return await this.redisService.set(uuid_, authenticationIDs[uuid_]);
   }
 
   private credentials(token) {
@@ -98,7 +98,7 @@ export class AuthService {
   }
 
   private async retrieveFromRedis(token) {
-    const res: any = this.redisService.retrieveIfConnected(token);
+    const res: any = await this.redisService.retrieveIfConnected(token);
     if (!res) {
       this.remove(token);
       return false;
@@ -118,28 +118,28 @@ export class AuthService {
     return authenticationIDs[token];
   }
 
-  public get(token) {
+  public async get(token) {
     if (authenticationIDs[token]) {
       this.put(token, authenticationIDs[token]);
       return authenticationIDs[token];
     }
 
-    return this.retrieveFromRedis(token);
+    return await this.retrieveFromRedis(token);
   }
 
-  public authenticate(creds) {
+  public async authenticate(creds) {
     if (creds.username === auth) {
       if (
         !(creds.password in authenticationIDs) ||
         !isActive(authenticationIDs[creds.password].date)
       ) {
-        return this.retrieveFromRedis(creds.password);
+        return await this.retrieveFromRedis(creds.password);
       }
 
-      return this.get(creds.password);
+      return await this.get(creds.password);
     }
 
-    const user = this.userService.connect(creds.username, creds.password);
+    const user = await this.userService.connect(creds.username, creds.password);
 
     if (!user) {
       return false;
@@ -162,7 +162,7 @@ export class PassportService {
         {
           passReqToCallback: true
         },
-        (req, username, password, passportCb) => {
+        async (req, username, password, passportCb) => {
           if (!username || !password) {
             return passportCb(null, false);
           }
@@ -170,7 +170,7 @@ export class PassportService {
           /**
            * Authentication.
            */
-          const user = this.authService.authenticate({
+          const user = await this.authService.authenticate({
             username: username,
             password: password
           });
@@ -217,6 +217,14 @@ export class PassportService {
       const user = this.authService.get(uuid_);
       callback(null, user);
     });
+  }
+
+  public initialize() {
+    return passport.initialize();
+  }
+
+  public session() {
+    return passport.session();
   }
 }
 

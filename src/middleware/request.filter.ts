@@ -2,14 +2,18 @@ import * as COOKIE_PARSER from 'cookie-parser';
 import * as BODY_PARSER from 'body-parser';
 import * as CORS from 'cors';
 import * as SESSION from 'express-session';
-import * as PASSPORT from 'PASSPORT';
 import { Logger } from './logger';
 import * as CONFIG from '../config';
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
+import { PassportService } from '../services/auth.service';
 const CORS_ALLOWED = CONFIG.CORS.Allowed || false;
+
+const passportService = inject(PassportService);
 
 @injectable()
 export class RequestFilter {
+  @passportService private passportService: PassportService;
+
   public cors() {
     return CORS();
   }
@@ -35,11 +39,11 @@ export class RequestFilter {
   }
 
   public initpass() {
-    return PASSPORT.initialize();
+    return this.passportService.initialize();
   }
 
   public sessionpass() {
-    return PASSPORT.session();
+    return this.passportService.session();
   }
 
   /**

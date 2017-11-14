@@ -9,7 +9,7 @@ import { AuthService } from '../services/auth.service';
 const pattern = /\/+/g;
 
 @injectable()
-@controller('/es/', AuthService.authenticate())
+@controller('/es', AuthService.authenticate())
 export class ElasticSearchController extends BaseHttpController {
   public constructor(
     @inject(Logger) private logger: Logger,
@@ -22,8 +22,10 @@ export class ElasticSearchController extends BaseHttpController {
   public all(@request() req: express.Request, @response() res: express.Response) {
     if (!this.canAcess(req)) {
       this.logger.warn('Tried to access a forbidden es endpoint. User has no access');
-      res.status(403).send('Not allowed');
-      return;
+      throw {
+        status: 403,
+        message: 'Not allowed. You do not have the reight access'
+      };
     }
 
     this.esService.proxy(req, res);

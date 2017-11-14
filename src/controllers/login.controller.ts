@@ -6,7 +6,7 @@ import * as express from 'express';
 const authService = inject(AuthService);
 
 @injectable()
-@controller('/login/', AuthService.authenticate())
+@controller('/login', AuthService.authenticate())
 export class LoginController extends BaseHttpController {
   @authService private authService: AuthService;
 
@@ -26,8 +26,8 @@ export class LoginController extends BaseHttpController {
   }
 
   @all('/logout')
-  public logout(req: express.Request, res: express.Response) {
-    this.authService.remove(req['user'][auth]); // remove from session before user logout
+  public async logout(req: express.Request, res: express.Response) {
+    await this.authService.remove(req['user'][auth]); // remove from session before user logout
     req['logout']();
     res.json({ message: 'Logged out' });
   }

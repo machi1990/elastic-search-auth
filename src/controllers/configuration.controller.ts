@@ -22,7 +22,7 @@ const logger = inject(Logger);
 const ADMIN = 'ADMIN';
 
 @injectable()
-@controller('/configurations/', AuthService.authenticate())
+@controller('/configurations', AuthService.authenticate())
 export class ConfigurationContoller extends BaseHttpController {
   @configService private readonly configService: ConfigurationService;
   @logger private readonly logger: Logger;
@@ -33,7 +33,10 @@ export class ConfigurationContoller extends BaseHttpController {
     if (principal.isInRole(ADMIN)) {
       next();
     } else {
-      res.status(403).send('Not allowed. You do not have the reight access');
+      throw {
+        status: 403,
+        message: 'Not allowed. You do not have the reight access'
+      };
     }
   }
 
@@ -43,7 +46,10 @@ export class ConfigurationContoller extends BaseHttpController {
     if (principal.isInRole(ADMIN)) {
       next();
     } else {
-      res.status(403).send('Not allowed. You do not have the reight access');
+      throw {
+        status: 403,
+        message: 'Not allowed. You do not have the reight access'
+      };
     }
   }
 
@@ -53,7 +59,10 @@ export class ConfigurationContoller extends BaseHttpController {
     if (principal.isInRole(ADMIN)) {
       next();
     } else {
-      res.status(403).send('Not allowed. You do not have the reight access');
+      throw {
+        status: 403,
+        message: 'Not allowed. You do not have the reight access'
+      };
     }
   }
 

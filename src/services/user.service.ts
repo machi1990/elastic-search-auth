@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Logger } from '../middleware/logger';
 import { ElasticSearchService } from './elasticsearch.service';
-import { User, INDEX, TYPE } from '../entities/user';
+import { User, INDEX, TYPE, ROLES } from '../entities/user';
 import { USER_MAPPING } from '../es-mapping';
 import * as ASSERT from 'assert';
 import * as request from 'request-promise';
@@ -46,16 +46,14 @@ export class UserService {
         size: query.size || 10
       });
       const hits = resp.hits.hits || [];
-      return Promise.resolve(
-        hits.map(hit => {
-          hit = hit._source;
-          hit.password = undefined;
-          return hit;
-        })
-      );
+      return hits.map(hit => {
+        hit = hit._source;
+        hit.password = undefined;
+        return hit;
+      });
     } catch (error) {
       this.logger.error(error);
-      return Promise.resolve([]);
+      return [];
     }
   }
 
@@ -99,7 +97,7 @@ export class UserService {
     DEFAULT_USER.role = 'ADMIN';
 
     try {
-      const exists = this.esService.client.exists({
+      const exists = await this.esService.client.exists({
         index: INDEX,
         type: TYPE,
         id: DEFAULT_USER.username
@@ -107,7 +105,7 @@ export class UserService {
 
       if (!exists) {
         try {
-          const res = this.create(DEFAULT_USER);
+          const res = await this.create(DEFAULT_USER);
           this.logger.info('Default user created: ' + JSON.stringify(res, null, 2));
         } catch (error) {
           this.logger.error(error);
@@ -174,7 +172,7 @@ export class UserService {
 
   public async get(username) {
     try {
-      const user = this.get_(username);
+      const user = await this.get_(username);
       user['password'] = undefined;
       return user;
     } catch (error) {
@@ -182,9 +180,9 @@ export class UserService {
     }
   }
 
-  public connect(username, password) {
+  public async connect(username, password) {
     try {
-      const user = this.get_(username);
+      const user = await this.get_(username);
       if (!EncryptionService.compare(password, user['password'])) {
         return false;
       }
@@ -194,5 +192,9 @@ export class UserService {
     } catch (error) {
       return false;
     }
+  }
+
+  public roles() {
+    return ROLES;
   }
 }

@@ -1,9 +1,10 @@
 import { Logger } from '../middleware/logger';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as compression from 'compression';
 
 const logger = inject(Logger);
 
+@injectable()
 export class ResponseFilter {
   @logger private logger: Logger;
 
