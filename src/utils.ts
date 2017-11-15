@@ -18,3 +18,7 @@ export const cron = (expression, job) => {
 export const uuid = () => {
   return TOKEN + '-' + uuidV4();
 };
+
+export const auth_header = 'AuthenticationSid';
+export const auth = '__authenticationsid__';
+export const INTERNAL_SERVER_ERROR = 500;

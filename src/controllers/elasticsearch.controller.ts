@@ -38,9 +38,7 @@ export class ElasticSearchController extends BaseHttpController {
       return false;
     }
 
-    const segments = req.url.split(pattern).filter(function(segment) {
-      return segment.length;
-    });
+    const segments = req.url.split(pattern).filter(segment => segment.length);
 
     const segLen = segments.length;
     if (!segLen) {

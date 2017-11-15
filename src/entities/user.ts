@@ -28,7 +28,7 @@ export class User {
   public role: string;
   public email: string;
 
-  constructor(user: Object) {
+  public constructor(user: Object) {
     this.username = user['username'];
     this.firstname = user['firstname'];
     this.lastname = user['lastname'];

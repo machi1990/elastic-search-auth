@@ -9,7 +9,7 @@ import { ElasticSearchService } from './services/elasticsearch.service';
 import { AuthProvider } from './services/auth.provider';
 import { interfaces, InversifyExpressServer, TYPE } from 'inversify-express-utils';
 import { ResponseFilter } from './middleware/response.filter';
-import { auth, auth_header } from './services/auth.service';
+import { auth_header, auth, INTERNAL_SERVER_ERROR } from './utils';
 
 /**
  * Router
@@ -31,14 +31,14 @@ const SERVER = new InversifyExpressServer(
   AuthProvider
 );
 
-const INTERNAL_SERVER_ERROR = 500;
-
 SERVER.setConfig(app => {
   container.get<RequestFilter>(RequestFilter).configureMiddlewaresFor(app);
   container.get<ResponseFilter>(ResponseFilter).config(app);
   app.use(container.get<Logger>(Logger).requestConnector());
   app.use((req, res, next) => {
-    res.setHeader(auth_header, req['user'] ? req['user'][auth] : req.headers['authorization']);
+    if (!res.headersSent) {
+      res.setHeader(auth_header, req['user'] ? req['user'][auth] : req.headers['authorization']);
+    }
     next();
   });
 }).setErrorConfig(app => {

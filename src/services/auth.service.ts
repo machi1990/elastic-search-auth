@@ -3,14 +3,13 @@ import * as passport from 'passport';
 import { UserService } from './user.service';
 import { RedisService } from './redis.service';
 import { Logger } from '../middleware/logger';
-import { cron, uuid } from '../utils';
+import { cron, uuid, auth_header, auth } from '../utils';
 import * as config from '../config';
 
 import * as passport_http from 'passport-http';
 import * as LdapStrategy from 'passport-ldapauth';
 import * as basicAuth from 'basic-auth';
 
-export const auth_header = 'AuthenticationSid';
 const userService = inject(UserService);
 const redisService = inject(RedisService);
 const logger = inject(Logger);
@@ -45,8 +44,6 @@ if (config.AUTH) {
     config.AUTH.type in supportedStrategies ? config.AUTH.type : strategyOpts.type;
   strategyOpts.server = config.AUTH.ldapOpts || strategyOpts.server;
 }
-
-export const auth = '__authenticationsid__';
 
 @injectable()
 export class AuthService {

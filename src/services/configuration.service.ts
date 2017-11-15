@@ -32,21 +32,7 @@ export class ConfigurationService {
       value: CONFIG.VERSION
     };
 
-    this.setup();
-  }
-
-  private async setup() {
-    try {
-      await REQUEST.post({
-        method: 'POST',
-        uri: this.ES_HOST + this.INDEX,
-        body: {},
-        json: true,
-        timeout: Infinity
-      });
-    } finally {
-      this.prepareMapping();
-    }
+    this.prepareMapping();
   }
 
   private async prepareMapping() {
@@ -58,6 +44,8 @@ export class ConfigurationService {
         json: true,
         timeout: Infinity
       });
+    } catch (e) {
+      this.logger.error(e);
     } finally {
       this.updateVersion();
     }

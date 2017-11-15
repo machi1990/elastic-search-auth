@@ -4,16 +4,10 @@ import * as assert from 'assert';
 import * as request from 'request-promise';
 import * as express from 'express';
 import * as CONFIG from '../config';
-import { isObject, cron } from '../utils';
+import { isObject, cron, auth_header, auth, INTERNAL_SERVER_ERROR } from '../utils';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../middleware/logger';
 import { MailingService } from './mailing.service';
-
-const error = (res, message) => {
-  res.status(500);
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify(message, null, 1));
-};
 
 assert.notEqual(CONFIG.ES, undefined, 'Elasticsearch opts required');
 assert.equal(true, isObject(CONFIG.ES), 'Elasticsearch config must be an object');
@@ -105,106 +99,74 @@ export class ElasticSearchService implements IEsService {
   public async sniff(timeout?: number): Promise<any> {
     timeout = Math.max(timeout || 10000, 10000);
 
-    return await this.client
-      .ping({
-        requestTimeout: timeout
-      });
+    return await this.client.ping({
+      requestTimeout: timeout
+    });
   }
 
   public proxy(req: express.Request, res: express.Response): void {
+    let proxyResponse: Promise<any>;
+
     switch (req.method) {
       case 'PUT':
-        return request
-          .put(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            error(res, err);
-          });
+        proxyResponse = request.put(this.opts(req));
       case 'POST':
-        request
-          .post(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.post(this.opts(req));
         break;
       case 'PATCH':
-        request
-          .patch(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.patch(this.opts(req));
         break;
       case 'HEAD':
-        request
-          .get(this.opts(req))
-          .then(body => {
-            res.send(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.get(this.opts(req));
         break;
       case 'OPTIONS':
-        request
-          .options(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.options(this.opts(req));
         break;
       case 'DELETE':
-        request
-          .delete(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.delete(this.opts(req));
         break;
       case 'GET':
-        request
-          .get(this.opts(req))
-          .then(body => {
-            res.json(body);
-          })
-          .catch(err => {
-            this.logger.error(err);
-            error(res, err);
-          });
+        proxyResponse = request.get(this.opts(req));
         break;
       default: {
-        error(res, 'Method not supported');
+        throw {
+          status: INTERNAL_SERVER_ERROR,
+          message: 'Method not supported'
+        };
       }
     }
+
+    proxyResponse
+      .then(this.onProxyResponse.bind(null, req, res, true))
+      .catch(this.onProxyResponse.bind(null, req, res, false));
+  }
+
+  private onProxyResponse(
+    req: express.Request,
+    res: express.Response,
+    okay: boolean,
+    proxyResponse: any
+  ) {
+    const headers = okay ? proxyResponse.headers : proxyResponse.response.headers;
+    for (const header in headers) {
+      res.setHeader(header, headers[header]);
+    }
+    res.setHeader(auth_header, req['user'] ? req['user'][auth] : req.headers['authorization']);
+    res.status(proxyResponse.statusCode).send(okay ? proxyResponse.body : proxyResponse.message);
   }
 
   private opts(req: express.Request): Object {
-    const headers  = Object.assign({}, req.headers);
-    delete headers['Authorization'];
+    const headers = Object.assign({}, req.headers);
     delete headers['authorization'];
-    const json = !headers['content-type'] ? true : (
-      headers['content-type'].indexOf('application/json') !== -1
-    );
+    delete headers['accept-encoding'];
+    const json = !headers['content-type']
+      ? true
+      : headers['content-type'].indexOf('application/json') !== -1;
 
     const opts = {
+      resolveWithFullResponse: true,
       method: req.method.toUpperCase(),
-      uri: ES_HOST + req.url.substring(1),
+      uri: ES_HOST + req.url.substring(3),
       body: req.body,
       timeout: SOME_MINUTES,
       headers: headers,

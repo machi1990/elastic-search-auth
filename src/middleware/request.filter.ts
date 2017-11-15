@@ -35,7 +35,7 @@ export class RequestFilter {
   }
 
   public raw() {
-    return BODY_PARSER.raw({limit: '100mb'});
+    return BODY_PARSER.raw({ limit: '100mb' });
   }
 
   public session() {

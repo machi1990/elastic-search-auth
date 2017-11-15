@@ -20,7 +20,9 @@ export class UserService {
   public constructor(
     @inject(Logger) private logger: Logger,
     @inject(ElasticSearchService) private esService: ElasticSearchService
-  ) {}
+  ) {
+    this.setup();
+  }
 
   private async setup() {
     try {
@@ -30,6 +32,8 @@ export class UserService {
         body: {},
         json: true // Automatically stringifies the body to JSON
       });
+    } catch (e) {
+      this.logger.error(e);
     } finally {
       this.prepareMapping();
     }
@@ -80,6 +84,8 @@ export class UserService {
         json: true,
         timeoute: Infinity // Automatically stringifies the body to JSON
       });
+    } catch (e) {
+      this.logger.error(e);
     } finally {
       this.createDefaultUser();
     }
@@ -117,14 +123,12 @@ export class UserService {
   }
 
   public async create(user: User) {
-    const USER = new User(user).user();
-
     try {
       const res = await this.esService.client.create({
         index: INDEX,
         type: TYPE,
         id: user.username,
-        body: user
+        body: new User(user).user()
       });
       this.logger.info(user.username + ' successfully created');
       return res;
@@ -159,11 +163,6 @@ export class UserService {
         type: TYPE,
         id: username
       });
-
-      if (!user._source) {
-        throw new Error('No such user');
-      }
-
       return user._source;
     } catch (error) {
       throw error;
@@ -183,6 +182,7 @@ export class UserService {
   public async connect(username, password) {
     try {
       const user = await this.get_(username);
+
       if (!EncryptionService.compare(password, user['password'])) {
         return false;
       }
