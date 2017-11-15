@@ -30,6 +30,14 @@ export class RequestFilter {
     return BODY_PARSER.urlencoded({ limit: '100mb', extended: false });
   }
 
+  public text() {
+    return BODY_PARSER.text({ limit: '100mb' });
+  }
+
+  public raw() {
+    return BODY_PARSER.raw({limit: '100mb'});
+  }
+
   public session() {
     return SESSION({
       secret: CONFIG.SESSION_SECRET || 'This is default session secret.',
@@ -58,6 +66,8 @@ export class RequestFilter {
 
     app.use(this.jsonparser());
     app.use(this.urlencoded());
+    app.use(this.text());
+    app.use(this.raw());
     app.use(this.cookieparser());
     app.use(this.session());
     app.use(this.initpass());

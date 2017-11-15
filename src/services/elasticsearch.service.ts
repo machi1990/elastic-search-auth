@@ -2,7 +2,7 @@ import * as elasticsearch from 'elasticsearch';
 import * as process from 'process';
 import * as assert from 'assert';
 import * as request from 'request-promise';
-import { Response, Request } from 'express';
+import * as express from 'express';
 import * as CONFIG from '../config';
 import { isObject, cron } from '../utils';
 import { inject, injectable } from 'inversify';
@@ -25,7 +25,7 @@ const SOME_MINUTES = 1000 * 60 * 10;
 export interface IEsService {
   client: any;
   sniff: (timeout?: number) => Promise<boolean>;
-  proxy: (req: Request, res: Response) => void;
+  proxy: (req: express.Request, res: express.Response) => void;
 }
 
 @injectable()
@@ -105,19 +105,13 @@ export class ElasticSearchService implements IEsService {
   public async sniff(timeout?: number): Promise<any> {
     timeout = Math.max(timeout || 10000, 10000);
 
-    return this.client
+    return await this.client
       .ping({
         requestTimeout: timeout
-      })
-      .then(result => {
-        return Promise.resolve(result);
-      })
-      .catch(err => {
-        return Promise.reject(err);
       });
   }
 
-  public proxy(req, res): void {
+  public proxy(req: express.Request, res: express.Response): void {
     switch (req.method) {
       case 'PUT':
         return request
@@ -200,17 +194,25 @@ export class ElasticSearchService implements IEsService {
     }
   }
 
-  private opts(req): Object {
-    const opts_ = {
+  private opts(req: express.Request): Object {
+    const headers  = Object.assign({}, req.headers);
+    delete headers['Authorization'];
+    delete headers['authorization'];
+    const json = !headers['content-type'] ? true : (
+      headers['content-type'].indexOf('application/json') !== -1
+    );
+
+    const opts = {
       method: req.method.toUpperCase(),
       uri: ES_HOST + req.url.substring(1),
       body: req.body,
       timeout: SOME_MINUTES,
-      json: true
+      headers: headers,
+      json: json
     };
 
-    this.logger.debug(JSON.stringify(opts_, null, 1));
+    this.logger.debug(JSON.stringify(opts, null, 1));
 
-    return opts_;
+    return opts;
   }
 }
