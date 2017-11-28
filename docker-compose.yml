@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-    image: es-auth:2.4.4
+    image: es-auth:3.0.0
     ports:
      - 3000:3000
   elasticsearch-server:
