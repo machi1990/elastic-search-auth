@@ -14,7 +14,6 @@ TODO
 
 3) Automatically backing up of cluster (Cluster snapshots)
 
-4) Use inversifyJs (http://inversify.io/) for IOC (DI done nicely)and TypeScript's strong typing. This is on going on this branch (https://github.com/machi1990/elastic-search-auth/tree/ftr-ioc-wc-inversifyjs).
 
 CONTACT
 ======

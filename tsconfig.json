@@ -1,0 +1,12 @@
+ {
+    "compilerOptions": {
+        "target": "es5",
+        "lib": ["es6", "dom"],
+        "outDir": "build",
+        "types": ["reflect-metadata", "node", "inversify"],
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    }
+}

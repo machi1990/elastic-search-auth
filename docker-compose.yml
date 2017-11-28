@@ -5,9 +5,27 @@ services:
       context: .
     image: es-auth:2.4.4
     ports:
-     - "3000:3000"
-  
-#  redis:
-#    image: redis
-#    ports: 
-#      - "6379:6379"
+     - 3000:3000
+  elasticsearch-server:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.2.0
+    environment:
+      action.destructive_requires_name: 'true'
+      bootstrap.memory_lock: 'false'
+      cluster.name: test
+      http.cors.allow-headers: X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+      http.cors.allow-methods: OPTIONS,HEAD,GET,POST,PUT,DELETE
+      http.cors.allow-origin: '*'
+      http.cors.enabled: 'true'
+      node.ingest: 'true'
+      node.name: node
+      xpack.graph.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      xpack.security.enabled: 'false'
+      xpack.watcher.enabled: 'false'
+    stdin_open: true
+    ports:
+      - 9200:9200
+  redis:
+    image: redis
+    ports: 
+      - 6379:6379
