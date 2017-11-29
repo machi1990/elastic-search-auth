@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as request from 'request-promise';
 import * as express from 'express';
 import * as CONFIG from '../config';
-import { isObject, cron, auth_header, auth, INTERNAL_SERVER_ERROR } from '../utils';
+import { isObject, cron, auth_header, auth, NOT_IMPLEMENTED } from '../utils';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../middleware/logger';
 import { MailingService } from './mailing.service';
@@ -130,7 +130,7 @@ export class ElasticSearchService implements IEsService {
         break;
       default: {
         throw {
-          status: INTERNAL_SERVER_ERROR,
+          status: NOT_IMPLEMENTED,
           message: 'Method not supported'
         };
       }

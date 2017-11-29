@@ -22,3 +22,4 @@ export const uuid = () => {
 export const auth_header = 'AuthenticationSid';
 export const auth = '__authenticationsid__';
 export const INTERNAL_SERVER_ERROR = 500;
+export const NOT_IMPLEMENTED = 501;
