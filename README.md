@@ -8,12 +8,9 @@ See "backend-config" field of the "package.json" file to see how to configure th
 
 TODO
 ====
-1) Unit tests.
+* Adds more authorization types - current supported are ldap authentication and a local implentation. The later is based on the user index which is automatically created on the target Elasticsearch cluster.
 
-2) Adds more authorization types - current supported are ldap authentication and a local implentation. The later is based on the user index which is automatically created on the target Elasticsearch cluster.
-
-3) Automatically backing up of cluster (Cluster snapshots)
-
+* Automatically backing up of cluster (Cluster snapshots)
 
 CONTACT
 ======
