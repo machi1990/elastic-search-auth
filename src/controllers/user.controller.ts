@@ -96,7 +96,7 @@ export class UserController extends BaseHttpController {
 
 	@httpPut('/change/password')
 	public async changePassword(@requestBody('password') password: string) {
-		if (this.isValidPassword(password)) {
+		if (!this.isValidPassword(password)) {
 			throw {
 				status: BAD_REQUEST,
 				message: 'Password must be between 6 to 20 characters'
@@ -156,7 +156,7 @@ export class UserController extends BaseHttpController {
 			};
 		}
 
-		if (this.isValidPassword(user.password)) {
+		if (!this.isValidPassword(user.password)) {
 			throw {
 				status: BAD_REQUEST,
 				message: 'Password must be between 6 to 20 characters'

@@ -131,10 +131,10 @@ export class UserService {
 				body: new User(user).user()
 			});
 			this.logger.info(user.username + ' successfully created');
-			return res;
+			return true;
 		} catch (error) {
 			this.logger.warn(user.username + ' could not be created');
-			throw error;
+			throw false;
 		}
 	}
 

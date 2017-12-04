@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import * as request from 'request-promise';
 import * as express from 'express';
 import * as CONFIG from '../config';
-import { isObject, cron, auth_header, auth, NOT_IMPLEMENTED } from '../utils';
+import { isObject, cron, auth_header, auth } from '../utils';
 import { inject, injectable } from 'inversify';
 import { Logger } from '../middleware/logger';
 import { MailingService } from './mailing.service';
@@ -13,8 +13,9 @@ assert.notEqual(CONFIG.ES, undefined, 'Elasticsearch opts required');
 assert.equal(true, isObject(CONFIG.ES), 'Elasticsearch config must be an object');
 assert.notEqual(CONFIG.ES.host, undefined, 'Elasticsearch host required');
 
+const TEN_SECONDS = 10000;
+const TEN_MINUTES = TEN_SECONDS * 60;
 const ES_HOST = CONFIG.ES.host;
-const SOME_MINUTES = 1000 * 60 * 10;
 
 export interface IEsService {
 	client: any;
@@ -52,8 +53,8 @@ export class ElasticSearchService implements IEsService {
 			return;
 		}
 
-		const interval = Math.min((CONFIG.ES.sniffRobot.sniffInterval || SOME_MINUTES) / 1000 * 60, 10);
-		const timeout = CONFIG.ES.sniffRobot.sniffTimeOut || SOME_MINUTES;
+		const interval = Math.min((CONFIG.ES.sniffRobot.sniffInterval || TEN_MINUTES) / 1000 * 60, 10);
+		const timeout = CONFIG.ES.sniffRobot.sniffTimeOut || TEN_MINUTES;
 		const alerting = isObject(CONFIG.ES.sniffRobot.alerting) ? CONFIG.ES.sniffRobot.alerting : {};
 
 		const monitor = () => {
@@ -97,46 +98,13 @@ export class ElasticSearchService implements IEsService {
 	}
 
 	public async sniff(timeout?: number): Promise<any> {
-		timeout = Math.max(timeout || 10000, 10000);
-
 		return await this.client.ping({
-			requestTimeout: timeout
+			requestTimeout: Math.max(timeout || TEN_SECONDS, TEN_SECONDS)
 		});
 	}
 
 	public proxy(req: express.Request, res: express.Response): void {
-		let proxyResponse: Promise<any>;
-
-		switch (req.method) {
-			case 'PUT':
-				proxyResponse = request.put(this.opts(req));
-			case 'POST':
-				proxyResponse = request.post(this.opts(req));
-				break;
-			case 'PATCH':
-				proxyResponse = request.patch(this.opts(req));
-				break;
-			case 'HEAD':
-				proxyResponse = request.get(this.opts(req));
-				break;
-			case 'OPTIONS':
-				proxyResponse = request.options(this.opts(req));
-				break;
-			case 'DELETE':
-				proxyResponse = request.delete(this.opts(req));
-				break;
-			case 'GET':
-				proxyResponse = request.get(this.opts(req));
-				break;
-			default: {
-				throw {
-					status: NOT_IMPLEMENTED,
-					message: 'Method not supported'
-				};
-			}
-		}
-
-		proxyResponse
+		request(this.opts(req))
 			.then(this.onProxyResponse.bind(null, req, res, true))
 			.catch(this.onProxyResponse.bind(null, req, res, false));
 	}
@@ -168,7 +136,7 @@ export class ElasticSearchService implements IEsService {
 			method: req.method.toUpperCase(),
 			uri: ES_HOST + req.url.substring(3),
 			body: req.body,
-			timeout: SOME_MINUTES,
+			timeout: TEN_MINUTES,
 			headers: headers,
 			json: json
 		};
