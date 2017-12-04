@@ -20,226 +20,226 @@ const authenticationIDs = {};
  * Default authentication field
  */
 const strategyOpts = {
-  usernameField: 'username',
-  passwordField: 'password',
-  type: 'basic', // ldapauth for ldap,
-  server: {
-    url: 'ldap://localhost:389',
-    bindDn: 'cn=root',
-    bindCredentials: 'secret',
-    searchBase: 'ou=passport-ldapauth',
-    searchFilter: '(uid={{username}})'
-  }
+	usernameField: 'username',
+	passwordField: 'password',
+	type: 'basic', // ldapauth for ldap,
+	server: {
+		url: 'ldap://localhost:389',
+		bindDn: 'cn=root',
+		bindCredentials: 'secret',
+		searchBase: 'ou=passport-ldapauth',
+		searchFilter: '(uid={{username}})'
+	}
 };
 
 const supportedStrategies = {
-  local: true,
-  ldap: true
+	local: true,
+	ldap: true
 };
 
 if (config.AUTH) {
-  strategyOpts.usernameField = config.AUTH.usernameField || strategyOpts.usernameField;
-  strategyOpts.passwordField = config.AUTH.passwordField || strategyOpts.passwordField;
-  strategyOpts.type =
-    config.AUTH.type in supportedStrategies ? config.AUTH.type : strategyOpts.type;
-  strategyOpts.server = config.AUTH.ldapOpts || strategyOpts.server;
+	strategyOpts.usernameField = config.AUTH.usernameField || strategyOpts.usernameField;
+	strategyOpts.passwordField = config.AUTH.passwordField || strategyOpts.passwordField;
+	strategyOpts.type =
+		config.AUTH.type in supportedStrategies ? config.AUTH.type : strategyOpts.type;
+	strategyOpts.server = config.AUTH.ldapOpts || strategyOpts.server;
 }
 
 @injectable()
 export class AuthService {
-  public static readonly TYPE = strategyOpts.type;
-  @userService private userService: UserService;
-  @redisService private redisService: RedisService;
-  @logger private logger: Logger;
+	public static readonly TYPE = strategyOpts.type;
+	@userService private userService: UserService;
+	@redisService private redisService: RedisService;
+	@logger private logger: Logger;
 
-  public static authenticate() {
-    return passport.authenticate(AuthService.TYPE);
-  }
+	public static authenticate() {
+		return passport.authenticate(AuthService.TYPE);
+	}
 
-  public async remove(token) {
-    delete authenticationIDs[token];
-    await this.redisService.remove(token);
-  }
+	public async remove(token) {
+		delete authenticationIDs[token];
+		await this.redisService.remove(token);
+	}
 
-  public async put(uuid_, user) {
-    user[auth] = user[auth] || uuid_;
-    user.date = Date.now();
-    user.__server = config.ES.host;
+	public async put(uuid_, user) {
+		user[auth] = user[auth] || uuid_;
+		user.date = Date.now();
+		user.__server = config.ES.host;
 
-    authenticationIDs[uuid_] = user;
+		authenticationIDs[uuid_] = user;
 
-    return await this.redisService.set(uuid_, authenticationIDs[uuid_]);
-  }
+		return await this.redisService.set(uuid_, authenticationIDs[uuid_]);
+	}
 
-  private credentials(token) {
-    token = decodeURIComponent(token || '');
-    token = token.replace('Basic ', '');
+	private credentials(token) {
+		token = decodeURIComponent(token || '');
+		token = token.replace('Basic ', '');
 
-    if (!token) {
-      this.logger.warn('Authentication token malformed');
-      return void 0;
-    }
+		if (!token) {
+			this.logger.warn('Authentication token malformed');
+			return void 0;
+		}
 
-    this.logger.info('Authentication header found. Verifying if user authorized');
+		this.logger.info('Authentication header found. Verifying if user authorized');
 
-    const buf = new Buffer(token, 'base64');
-    const creds = buf
-      .toString('utf-8')
-      .trim()
-      .split(':');
+		const buf = new Buffer(token, 'base64');
+		const creds = buf
+			.toString('utf-8')
+			.trim()
+			.split(':');
 
-    return {
-      username: creds[0],
-      password: creds[1]
-    };
-  }
+		return {
+			username: creds[0],
+			password: creds[1]
+		};
+	}
 
-  private async retrieveFromRedis(token) {
-    const res: any = await this.redisService.retrieveIfConnected(token);
-    if (!res) {
-      this.remove(token);
-      return false;
-    }
+	private async retrieveFromRedis(token) {
+		const res: any = await this.redisService.retrieveIfConnected(token);
+		if (!res) {
+			this.remove(token);
+			return false;
+		}
 
-    if (!isActive(res.date)) {
-      this.redisService.remove(token);
-      return false;
-    }
+		if (!isActive(res.date)) {
+			this.redisService.remove(token);
+			return false;
+		}
 
-    if (res.__server !== config.ES.host) {
-      this.remove(token);
-      return false;
-    }
+		if (res.__server !== config.ES.host) {
+			this.remove(token);
+			return false;
+		}
 
-    this.put(token, res);
-    return authenticationIDs[token];
-  }
+		this.put(token, res);
+		return authenticationIDs[token];
+	}
 
-  public async get(token) {
-    if (authenticationIDs[token]) {
-      this.put(token, authenticationIDs[token]);
-      return authenticationIDs[token];
-    }
+	public async get(token) {
+		if (authenticationIDs[token]) {
+			this.put(token, authenticationIDs[token]);
+			return authenticationIDs[token];
+		}
 
-    return await this.retrieveFromRedis(token);
-  }
+		return await this.retrieveFromRedis(token);
+	}
 
-  public async authenticate(creds) {
-    if (creds.username === auth) {
-      if (
-        !(creds.password in authenticationIDs) ||
-        !isActive(authenticationIDs[creds.password].date)
-      ) {
-        return await this.retrieveFromRedis(creds.password);
-      }
+	public async authenticate(creds) {
+		if (creds.username === auth) {
+			if (
+				!(creds.password in authenticationIDs) ||
+				!isActive(authenticationIDs[creds.password].date)
+			) {
+				return await this.retrieveFromRedis(creds.password);
+			}
 
-      return await this.get(creds.password);
-    }
+			return await this.get(creds.password);
+		}
 
-    const user = await this.userService.connect(creds.username, creds.password);
+		const user = await this.userService.connect(creds.username, creds.password);
 
-    if (!user) {
-      return false;
-    }
+		if (!user) {
+			return false;
+		}
 
-    this.put(uuid(), user);
-    return user;
-  }
+		this.put(uuid(), user);
+		return user;
+	}
 }
 
 @injectable()
 export class PassportService {
-  public constructor(@inject(AuthService) private authService: AuthService) {
-    this.setup();
-  }
+	public constructor(@inject(AuthService) private authService: AuthService) {
+		this.setup();
+	}
 
-  private get strategy() {
-    if (strategyOpts.type === 'basic') {
-      return new BasicStrategy(
-        {
-          passReqToCallback: true
-        },
-        async (req, username, password, passportCb) => {
-          if (!username || !password) {
-            return passportCb(null, false);
-          }
+	private get strategy() {
+		if (strategyOpts.type === 'basic') {
+			return new BasicStrategy(
+				{
+					passReqToCallback: true
+				},
+				async (req, username, password, passportCb) => {
+					if (!username || !password) {
+						return passportCb(null, false);
+					}
 
-          /**
-           * Authentication.
-           */
-          const user = await this.authService.authenticate({
-            username: username,
-            password: password
-          });
+					/**
+					 * Authentication.
+					 */
+					const user = await this.authService.authenticate({
+						username: username,
+						password: password
+					});
 
-          if (!user) {
-            return passportCb(null, false);
-          }
+					if (!user) {
+						return passportCb(null, false);
+					}
 
-          return this.strategyCb(req, user, passportCb);
-        }
-      );
-    }
+					return this.strategyCb(req, user, passportCb);
+				}
+			);
+		}
 
-    return new LdapStrategy(
-      {
-        server: strategyOpts.server,
-        credentialsLookup: basicAuth,
-        passReqToCallback: true
-      },
-      this.strategyCb
-    );
-  }
+		return new LdapStrategy(
+			{
+				server: strategyOpts.server,
+				credentialsLookup: basicAuth,
+				passReqToCallback: true
+			},
+			this.strategyCb
+		);
+	}
 
-  private strategyCb(req, user, passportCb) {
-    if (!user) {
-      return passportCb(null, user);
-    }
+	private strategyCb(req, user, passportCb) {
+		if (!user) {
+			return passportCb(null, user);
+		}
 
-    if (user[auth] === undefined) {
-      this.authService.put(uuid(), user);
-    }
+		if (user[auth] === undefined) {
+			this.authService.put(uuid(), user);
+		}
 
-    return passportCb(null, user);
-  }
+		return passportCb(null, user);
+	}
 
-  private setup() {
-    passport.use(this.strategy);
+	private setup() {
+		passport.use(this.strategy);
 
-    passport.serializeUser((user, callback) => {
-      callback(null, user[auth]);
-    });
+		passport.serializeUser((user, callback) => {
+			callback(null, user[auth]);
+		});
 
-    passport.deserializeUser((uuid_, callback) => {
-      const user = this.authService.get(uuid_);
-      callback(null, user);
-    });
-  }
+		passport.deserializeUser((uuid_, callback) => {
+			const user = this.authService.get(uuid_);
+			callback(null, user);
+		});
+	}
 
-  public initialize() {
-    return passport.initialize();
-  }
+	public initialize() {
+		return passport.initialize();
+	}
 
-  public session() {
-    return passport.session();
-  }
+	public session() {
+		return passport.session();
+	}
 }
 
 const isActive = val => {
-  return Date.now() - val <= SESSION_TIME;
+	return Date.now() - val <= SESSION_TIME;
 };
 
 const removeExpiredSessions = () => {
-  const expired = [];
-  for (const id in authenticationIDs) {
-    if (!isActive(authenticationIDs[id])) {
-      expired.push(id);
-    }
-  }
+	const expired = [];
+	for (const id in authenticationIDs) {
+		if (!isActive(authenticationIDs[id])) {
+			expired.push(id);
+		}
+	}
 
-  expired.forEach(id => {
-    delete authenticationIDs[id];
-  });
+	expired.forEach(id => {
+		delete authenticationIDs[id];
+	});
 };
 
 /**
