@@ -134,6 +134,7 @@ export class UserService {
 			return true;
 		} catch (error) {
 			this.logger.warn(user.username + ' could not be created');
+			this.logger.error(error);
 			throw false;
 		}
 	}

@@ -90,10 +90,11 @@ export class ConfigurationService {
 			});
 
 			this.logger.info(configuration.key + ' successfully created');
-			return res;
+			return true;
 		} catch (error) {
 			this.logger.warn(configuration.key + ' could not be created');
-			throw error;
+			this.logger.error(error);
+			throw false;
 		}
 	}
 
@@ -111,7 +112,8 @@ export class ConfigurationService {
 
 			return config._source.value;
 		} catch (error) {
-			throw error;
+			this.logger.error(error);
+			throw false;
 		}
 	}
 
@@ -124,8 +126,9 @@ export class ConfigurationService {
 			});
 
 			this.logger.info(key + ' successfully deleted');
-			return deleted;
+			return true;
 		} catch (error) {
+			this.logger.error(error);
 			return false;
 		}
 	}
@@ -143,9 +146,10 @@ export class ConfigurationService {
 					doc: configuration
 				}
 			});
-
-			return updated;
+			this.logger.info(updated);
+			return true;
 		} catch (error) {
+			this.logger.error(error);
 			return false;
 		}
 	}
@@ -164,6 +168,7 @@ export class ConfigurationService {
 
 			return hits.map(hit => hit._source);
 		} catch (error) {
+			this.logger.error(error);
 			return [];
 		}
 	}

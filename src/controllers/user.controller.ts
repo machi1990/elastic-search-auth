@@ -15,7 +15,8 @@ import { UserService } from '../services/user.service';
 import { Logger } from '../middleware/logger';
 import * as express from 'express';
 import { EncryptionService } from '../services/encryption.service';
-import { BAD_REQUEST, FORBIDDEN } from '../utils';
+import { BAD_REQUEST, FORBIDDEN, CREATED, INTERNAL_SERVER_ERROR } from '../utils';
+import { create } from 'domain';
 
 const ADMIN = 'ADMIN';
 const pattern = /[^a-zA-Z0-9\.]/;
@@ -111,6 +112,28 @@ export class UserController extends BaseHttpController {
 		return await this.userService.update(user);
 	}
 
+	@httpPut('/reinit/password/')
+	public async reinitPassword(@requestBody() user: any) {
+		if (!user.username) {
+			throw {
+				status: BAD_REQUEST,
+				message: 'Username required'
+			};
+		}
+
+		if (!this.isValidPassword(user.password)) {
+			throw {
+				status: BAD_REQUEST,
+				message: 'Password must be between 6 to 20 characters'
+			};
+		}
+
+		return await this.userService.update({
+			username: user.username,
+			password: EncryptionService.encrypt(user.password)
+		});
+	}
+
 	@httpPut('/edit/')
 	public async edit(@requestBody() user: any) {
 		if (!user['username']) {
@@ -125,7 +148,7 @@ export class UserController extends BaseHttpController {
 	}
 
 	@httpPost('/create/')
-	public async create(@requestBody() user: any) {
+	public async create(@requestBody() user: any, response: express.Response) {
 		if (!user.username) {
 			throw {
 				status: BAD_REQUEST,
@@ -163,7 +186,15 @@ export class UserController extends BaseHttpController {
 			};
 		}
 
-		return await this.userService.create(user);
+		try {
+			const created = await this.userService.create(user);
+			response.status(CREATED).send();
+		} catch (e) {
+			throw {
+				status: INTERNAL_SERVER_ERROR,
+				message: 'User not created'
+			};
+		}
 	}
 
 	private isValidPassword(password) {

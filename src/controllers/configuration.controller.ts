@@ -4,7 +4,7 @@ import { AuthService } from '../services/auth.service';
 import { ConfigurationService } from '../services/configuration.service';
 import { Logger } from '../middleware/logger';
 import * as express from 'express';
-import { BAD_REQUEST, CREATED, FORBIDDEN } from '../utils';
+import { BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR } from '../utils';
 
 import {
 	controller,
@@ -82,38 +82,40 @@ export class ConfigurationContoller extends BaseHttpController {
 	}
 
 	@httpDelete('/delete/:key')
-	public delete(@requestParam('key') key: string, res: express.Response) {
+	public async delete(@requestParam('key') key: string, response: express.Response) {
 		if (this.configService.key === key) {
-			res.status(BAD_REQUEST).send('Not allowed');
+			response.status(BAD_REQUEST).send('Not allowed');
 			return;
 		}
 
-		const deleted = this.configService.delete(key);
-		if (deleted) res.send(deleted);
-		else res.status(BAD_REQUEST).send(deleted);
+		return await this.configService.delete(key);
 	}
 
 	@httpPut('/edit/')
-	public edit(@requestBody() configuration: any, res: express.Response) {
+	public async edit(@requestBody() configuration: any, res: express.Response) {
 		if (!configuration || !configuration.key) {
 			res.status(BAD_REQUEST).send('Malformed');
 			return;
 		}
 
-		const updated = this.configService.update(configuration);
-		if (updated) res.json(updated);
-		else res.status(BAD_REQUEST).send(updated);
+		return await this.configService.update(configuration);
 	}
 
 	@httpPost('/create/')
-	public create(@requestBody() configuration: any, res: express.Response) {
+	public async create(@requestBody() configuration: any, response: express.Response) {
 		if (!configuration || !configuration.key) {
-			res.status(BAD_REQUEST).send('Malformed');
+			response.status(BAD_REQUEST).send('Malformed');
 			return;
 		}
 
-		const created = this.configService.create(configuration.key, configuration.value);
-		if (created) res.status(CREATED).json(created);
-		else res.status(BAD_REQUEST).send(created);
+		try {
+			const created = await this.configService.create(configuration.key, configuration.value);
+			response.sendStatus(CREATED);
+		} catch (error) {
+			throw {
+				status: INTERNAL_SERVER_ERROR,
+				message: 'Configuration not created'
+			};
+		}
 	}
 }
