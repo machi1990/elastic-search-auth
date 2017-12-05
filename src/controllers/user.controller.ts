@@ -148,7 +148,7 @@ export class UserController extends BaseHttpController {
 	}
 
 	@httpPost('/create/')
-	public async create(@requestBody() user: any, response: express.Response) {
+	public async create(@requestBody() user: any) {
 		if (!user.username) {
 			throw {
 				status: BAD_REQUEST,
@@ -187,8 +187,7 @@ export class UserController extends BaseHttpController {
 		}
 
 		try {
-			const created = await this.userService.create(user);
-			response.status(CREATED).send();
+			return await this.userService.create(user);
 		} catch (e) {
 			throw {
 				status: INTERNAL_SERVER_ERROR,

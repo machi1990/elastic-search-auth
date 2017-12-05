@@ -69,7 +69,10 @@ export class UserService {
 				id: username
 			});
 			this.logger.info(username + ' successfully deleted');
-			return true;
+			return {
+				deleted: true,
+				message: 'User successfully deleted'
+			};
 		} catch (error) {
 			return false;
 		}
@@ -131,7 +134,10 @@ export class UserService {
 				body: new User(user).user()
 			});
 			this.logger.info(user.username + ' successfully created');
-			return true;
+			return {
+				created: true,
+				message: 'User successfully created'
+			};
 		} catch (error) {
 			this.logger.warn(user.username + ' could not be created');
 			this.logger.error(error);
@@ -150,7 +156,10 @@ export class UserService {
 				}
 			});
 			this.logger.info(res);
-			return true;
+			return {
+				updated: true,
+				message: 'User successfully updated'
+			};
 		} catch (error) {
 			this.logger.error(error);
 			return false;

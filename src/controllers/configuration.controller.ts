@@ -82,35 +82,40 @@ export class ConfigurationContoller extends BaseHttpController {
 	}
 
 	@httpDelete('/delete/:key')
-	public async delete(@requestParam('key') key: string, response: express.Response) {
+	public async delete(@requestParam('key') key: string) {
 		if (this.configService.key === key) {
-			response.status(BAD_REQUEST).send('Not allowed');
-			return;
+			throw {
+				status: BAD_REQUEST,
+				message: 'Not allowed'
+			};
 		}
 
 		return await this.configService.delete(key);
 	}
 
 	@httpPut('/edit/')
-	public async edit(@requestBody() configuration: any, res: express.Response) {
+	public async edit(@requestBody() configuration: any) {
 		if (!configuration || !configuration.key) {
-			res.status(BAD_REQUEST).send('Malformed');
-			return;
+			throw {
+				status: BAD_REQUEST,
+				message: 'Malformed'
+			};
 		}
 
 		return await this.configService.update(configuration);
 	}
 
 	@httpPost('/create/')
-	public async create(@requestBody() configuration: any, response: express.Response) {
+	public async create(@requestBody() configuration: any) {
 		if (!configuration || !configuration.key) {
-			response.status(BAD_REQUEST).send('Malformed');
-			return;
+			throw {
+				status: BAD_REQUEST,
+				message: 'Malformed'
+			};
 		}
 
 		try {
-			const created = await this.configService.create(configuration.key, configuration.value);
-			response.sendStatus(CREATED);
+			return await this.configService.create(configuration.key, configuration.value);
 		} catch (error) {
 			throw {
 				status: INTERNAL_SERVER_ERROR,

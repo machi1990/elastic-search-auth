@@ -50,6 +50,7 @@ export class ConfigurationService {
 			this.updateVersion();
 		}
 	}
+
 	private async updateVersion() {
 		try {
 			const updated = await this.esService.client.update({
@@ -90,7 +91,11 @@ export class ConfigurationService {
 			});
 
 			this.logger.info(configuration.key + ' successfully created');
-			return true;
+
+			return {
+				created: true,
+				message: 'Configuration successfully created'
+			};
 		} catch (error) {
 			this.logger.warn(configuration.key + ' could not be created');
 			this.logger.error(error);
@@ -126,7 +131,10 @@ export class ConfigurationService {
 			});
 
 			this.logger.info(key + ' successfully deleted');
-			return true;
+			return {
+				deleted: true,
+				message: 'Configuration successfully deleted'
+			};
 		} catch (error) {
 			this.logger.error(error);
 			return false;
@@ -146,8 +154,13 @@ export class ConfigurationService {
 					doc: configuration
 				}
 			});
+
 			this.logger.info(updated);
-			return true;
+
+			return {
+				updated: true,
+				message: 'Configuration successfully updated'
+			};
 		} catch (error) {
 			this.logger.error(error);
 			return false;
