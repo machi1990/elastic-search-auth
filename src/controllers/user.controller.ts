@@ -7,16 +7,19 @@ import {
 	httpDelete,
 	httpGet,
 	httpPut,
+	request,
+	next,
+	response,
 	requestBody
 } from 'inversify-express-utils';
+
+import { BAD_REQUEST, FORBIDDEN, CREATED, INTERNAL_SERVER_ERROR } from '../utils';
 import { AuthService } from '../services/auth.service';
 import { injectable, inject } from 'inversify';
 import { UserService } from '../services/user.service';
 import { Logger } from '../middleware/logger';
-import * as express from 'express';
 import { EncryptionService } from '../services/encryption.service';
-import { BAD_REQUEST, FORBIDDEN, CREATED, INTERNAL_SERVER_ERROR } from '../utils';
-import { create } from 'domain';
+import * as express from 'express';
 
 const ADMIN = 'ADMIN';
 const pattern = /[^a-zA-Z0-9\.]/;
@@ -32,7 +35,7 @@ export class UserController extends BaseHttpController {
 	@authService private authService: AuthService;
 
 	@httpPost('*')
-	public allPost(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allPost(@next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (principal.isInRole(ADMIN)) {
 			next();
@@ -45,7 +48,7 @@ export class UserController extends BaseHttpController {
 	}
 
 	@httpPut('*')
-	public allPut(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allPut(@request() req: express.Request, @next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (req.url.includes('/change/password')) {
 			next();
@@ -63,7 +66,7 @@ export class UserController extends BaseHttpController {
 	}
 
 	@httpDelete('*')
-	public allDelete(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allDelete(@next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (principal.isInRole(ADMIN)) {
 			next();
@@ -148,7 +151,7 @@ export class UserController extends BaseHttpController {
 	}
 
 	@httpPost('/create/')
-	public async create(@requestBody() user: any) {
+	public async create(@requestBody() user: any, @response() res: express.Response) {
 		if (!user.username) {
 			throw {
 				status: BAD_REQUEST,
@@ -187,7 +190,7 @@ export class UserController extends BaseHttpController {
 		}
 
 		try {
-			return await this.userService.create(user);
+			res.status(CREATED).send(await this.userService.create(user));
 		} catch (e) {
 			throw {
 				status: INTERNAL_SERVER_ERROR,

@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { controller, all, BaseHttpController } from 'inversify-express-utils';
+import { controller, all, BaseHttpController, request, response } from 'inversify-express-utils';
 import { AuthService } from '../services/auth.service';
 import { auth, auth_header } from '../utils';
 import * as express from 'express';
@@ -12,7 +12,7 @@ export class LoginController extends BaseHttpController {
 	@authService private authService: AuthService;
 
 	@all('/')
-	public login(req: express.Request, res: express.Response) {
+	public login(@request() req: express.Request, @response() res: express.Response) {
 		const user = this.httpContext.user.details;
 
 		delete user[auth];
@@ -27,7 +27,7 @@ export class LoginController extends BaseHttpController {
 	}
 
 	@all('/logout')
-	public async logout(req: express.Request, res: express.Response) {
+	public async logout(@request() req: express.Request, @response() res: express.Response) {
 		await this.authService.remove(req['user'][auth]); // remove from session before user logout
 		req['logout']();
 		res.json({ message: 'Logged out' });

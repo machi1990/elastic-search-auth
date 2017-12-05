@@ -2,10 +2,10 @@ import { injectable, inject } from 'inversify';
 import { controller, all, request, response, BaseHttpController } from 'inversify-express-utils';
 import { Logger } from '../middleware/logger';
 import { ElasticSearchService } from '../services/elasticsearch.service';
-import * as express from 'express';
 import { INDEX as userIndex } from '../entities/user';
 import { AuthService } from '../services/auth.service';
 import { FORBIDDEN } from '../utils';
+import * as express from 'express';
 
 const pattern = /\/+/g;
 

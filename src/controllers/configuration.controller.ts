@@ -16,7 +16,9 @@ import {
 	httpGet,
 	requestParam,
 	requestBody,
-	queryParam
+	queryParam,
+	response,
+	next
 } from 'inversify-express-utils';
 
 const configService = inject(ConfigurationService);
@@ -30,7 +32,7 @@ export class ConfigurationContoller extends BaseHttpController {
 	@logger private readonly logger: Logger;
 
 	@httpPost('*')
-	public allPost(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allPost(@next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (principal.isInRole(ADMIN)) {
 			next();
@@ -43,7 +45,7 @@ export class ConfigurationContoller extends BaseHttpController {
 	}
 
 	@httpPut('*')
-	public allPut(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allPut(@next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (principal.isInRole(ADMIN)) {
 			next();
@@ -56,7 +58,7 @@ export class ConfigurationContoller extends BaseHttpController {
 	}
 
 	@httpDelete('*')
-	public allDelete(req: express.Request, res: express.Response, next: express.NextFunction) {
+	public allDelete(@next() next: express.NextFunction) {
 		const principal: interfaces.Principal = this.httpContext.user;
 		if (principal.isInRole(ADMIN)) {
 			next();
@@ -106,7 +108,7 @@ export class ConfigurationContoller extends BaseHttpController {
 	}
 
 	@httpPost('/create/')
-	public async create(@requestBody() configuration: any) {
+	public async create(@requestBody() configuration: any, @response() res: express.Response) {
 		if (!configuration || !configuration.key) {
 			throw {
 				status: BAD_REQUEST,
@@ -115,7 +117,9 @@ export class ConfigurationContoller extends BaseHttpController {
 		}
 
 		try {
-			return await this.configService.create(configuration.key, configuration.value);
+			res
+				.status(CREATED)
+				.send(await this.configService.create(configuration.key, configuration.value));
 		} catch (error) {
 			throw {
 				status: INTERNAL_SERVER_ERROR,
